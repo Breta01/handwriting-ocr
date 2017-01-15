@@ -87,13 +87,16 @@ venv/
 ENV/
 
 # Spyder project settings
-.spyderproject
+.spyderproject/
 
 # Rope project settings
-.ropeproject
+.ropeproject/
 
 # Visual Studio Code
-.vscode
+.vscode/
+
+# PyCharm
+.idea/
 
 # Data + Notes
 data/
