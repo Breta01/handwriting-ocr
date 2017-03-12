@@ -98,6 +98,8 @@ ENV/
 # PyCharm
 .idea/
 
-# Data + Notes
+# Data + Models + Notes
+# They're too big
 data/
 doc/
+models/
