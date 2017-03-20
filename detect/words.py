@@ -71,7 +71,7 @@ def textDetect(img, image):
         r = cv2.countNonZero(maskROI) / (w * h)
         
         # Limits for text
-        if r > 0.2 and w > 10 and h > 10:
+        if r > 0.2 and 1600 > w > 8 and 1600 > h > 8:
             cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
             boundingBoxes = np.vstack((boundingBoxes, np.array([x, y, x+w, y+h])))
             
@@ -138,7 +138,7 @@ def textDetectWatershed(thresh):
         r = cv2.countNonZero(maskROI) / (w * h)
         
         # Limits for text
-        if r > 0.2 and 1500 > w > 20 and 2000 > h > 20:
+        if r > 0.2 and 1500 > w > 15 and 2000 > h > 15:
             cv2.rectangle(image, (x, y),(x+w,y+h), (0, 255, 0), 2)
         
     implt(image)
