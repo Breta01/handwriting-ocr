@@ -102,4 +102,4 @@ ENV/
 # They're too big
 data/
 doc/
-models/
+models/backup/
