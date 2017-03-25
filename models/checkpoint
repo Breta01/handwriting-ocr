@@ -1,2 +1,2 @@
-model_checkpoint_path: "CharClassifier"
-all_model_checkpoint_paths: "CharClassifier"
+model_checkpoint_path: "CharClassifier-cz"
+all_model_checkpoint_paths: "CharClassifier-cz"
