@@ -1,0 +1,2 @@
+model_checkpoint_path: "CNN-CG"
+all_model_checkpoint_paths: "CNN-CG"
