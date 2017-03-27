@@ -18,7 +18,7 @@ def wordTilt(img, height):
         # Set min number of valid lines (try higher)
         numLines = np.sum(1 for l in lines if l[0][1] < 0.7 or l[0][1] > 2.6)
         if numLines > 1:
-            meanAngle = np.median([l[0][1] for l in lines if l[0][1] < 0.7 or l[0][1] > 2.6])
+            meanAngle = np.mean([l[0][1] for l in lines if l[0][1] < 0.7 or l[0][1] > 2.6])
 
         # Look for angle with correct value
         if meanAngle != 0 and (meanAngle < 0.7 or meanAngle > 2.6):
@@ -56,11 +56,15 @@ def sobelDetect(channel):
     # Combine x, y gradient magnitudes sqrt(x^2 + y^2)
     sobel = np.hypot(sobelX, sobelY)
     sobel[sobel > 255] = 255
-    return sobel
+    return np.uint8(sobel)
 
 
 def imageNorm(image, height):
-    """ Preprocess image for """
+    """ 
+    Preprocess image
+    => resize, use only edges, tilt world
+    """
+    image = resize(image, height, True)
     # @TODO - Need speed up -> configure bilateral fileter
     img = cv2.bilateralFilter(image, 0, 30, 30)
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -68,7 +72,7 @@ def imageNorm(image, height):
     # @TODO Can try only revers colors on grayscale image
     # reversGray = cv2.bitwise_not(gray)
 
-    edges = np.uint8(sobelDetect(gray))
+    edges = sobelDetect(gray)
     ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
     return wordTilt(th, height)
 
@@ -76,15 +80,18 @@ def imageNorm(image, height):
 def cropAddBorder(img, height, threshold=0):
     """ Crop and add border to word image of letter segmentation """
     # Clear small values
-    img[img < 40] = 0
+    ret, img = cv2.threshold(img, 50, 255, cv2.THRESH_TOZERO)
     # Mask of pixels brighter than threshold
     mask = img > threshold
     coords = np.argwhere(mask)
-    # Bounding box of non-black pixels.
-    x0, y0 = coords.min(axis=0)
-    x1, y1 = coords.max(axis=0) + 1
-    # Croping image
-    resize(img[x0:x1, y0:y1], height, True), 
+    try:
+        # Bounding box of non-black pixels.
+        x0, y0 = coords.min(axis=0)
+        x1, y1 = coords.max(axis=0) + 1
+        # Croping image
+        resize(img[x0:x1, y0:y1], height, True)
+    except Exception:
+        pass
     return cv2.copyMakeBorder(img, 0, 0, 15, 15,
                               cv2.BORDER_CONSTANT,
                               value=[0, 0, 0])

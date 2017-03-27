@@ -10,28 +10,34 @@ from .helpers import *
 
 def detection(image):
     """ Detecting the words bounding boxes """
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)
+    # Preprocess image for word detection
+    blurred = cv2.GaussianBlur(image, (5, 5), 10)
     edgeImg = edgeDetect(blurred)
-    img = np.uint8(edgeImg)
-    img = cv2.Canny(img, 100,200)
-    bwImage = cv2.morphologyEx(img, cv2.MORPH_CLOSE,
+    ret, edgeImg = cv2.threshold(edgeImg, 50, 255, cv2.THRESH_BINARY)
+    bwImage = cv2.morphologyEx(edgeImg, cv2.MORPH_CLOSE,
                                np.ones((15,15), np.uint8))
+    # Return detected bounding boxes
     return textDetect(bwImage, image)
 
 
 def edgeDetect(im):
-    """ Edge detection """
+    """ 
+    Edge detection 
+    Sobel operator is applied for each image layer (RGB)
+    """
     return np.max(np.array([sobelDetect(im[:,:, 0]),
                             sobelDetect(im[:,:, 1]),
                             sobelDetect(im[:,:, 2])]), axis=0)
 
 
 def sobelDetect(channel):
+    """ Sobel operator """
     sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)
     sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1)
     sobel = np.hypot(sobelX, sobelY)
     sobel[sobel > 255] = 255
-    return sobel
+    return np.uint8(sobel)
+
 
 def textDetect(img, image):
     """ Text detection using contours """
@@ -45,7 +51,7 @@ def textDetect(img, image):
     index = 0    
     boundingBoxes = np.array([0,0,0,0])
     
-    # For contours drawing
+    # image for drawing bounding boxes
     small = cv2.cvtColor(small, cv2.COLOR_GRAY2RGB)
     
     # Go through all contours in top level
@@ -57,7 +63,7 @@ def textDetect(img, image):
         r = cv2.countNonZero(maskROI) / (w * h)
         
         # Limits for text
-        if r > 0.2 and 1600 > w > 8 and 1600 > h > 8:
+        if r > 0.2 and 1600 > w > 10 and 1600 > h > 10:
             cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
             boundingBoxes = np.vstack((boundingBoxes,
                                        np.array([x, y, x+w, y+h])))
