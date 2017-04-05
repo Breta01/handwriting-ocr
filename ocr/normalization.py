@@ -62,16 +62,12 @@ def sobelDetect(channel):
 def imageNorm(image, height):
     """ 
     Preprocess image
-    => resize, use only edges, tilt world
+    => resize, get edges, tilt world
     """
     image = resize(image, height, True)
-    # @TODO - Need speed up -> configure bilateral fileter
     img = cv2.bilateralFilter(image, 0, 30, 30)
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
  
-    # @TODO Can try only revers colors on grayscale image
-    # reversGray = cv2.bitwise_not(gray)
-
     edges = sobelDetect(gray)
     ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
     return wordTilt(th, height)

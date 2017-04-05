@@ -10,6 +10,7 @@ class TrainingPlot:
     """
     Creating live plot during training 
     REUIRES notebook backend: %matplotlib notebook
+    @TODO Migrate to Tensorboard
     """
     trainLoss = []
     trainAcc = []
@@ -42,7 +43,7 @@ class TrainingPlot:
         self.fig.canvas.draw()
 
         
-    def updateLoss(self, lossTrain, index):
+    def updateCost(self, lossTrain, index):
         # Threshold the first loss addition - better graph scale
         if len(self.trainLoss) == 0 and lossTrain > 2:
             lossTrain = 2
