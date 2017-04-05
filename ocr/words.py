@@ -1,4 +1,4 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 """
 Detect words on the page
 return array of words' bounding boxes
@@ -77,7 +77,7 @@ def textDetect(img, image):
     
 
 def textDetectWatershed(thresh):
-    """ Text detection using watershed algorithm - NOT IN USE"""
+    """ Text detection using watershed algorithm - NOT IN USE """
     # According to: http://docs.opencv.org/trunk/d3/db4/tutorial_py_watershed.html
     img = cv2.cvtColor(cv2.imread("data/textdet/%s.jpg" % IMG),
                        cv2.COLOR_BGR2RGB)

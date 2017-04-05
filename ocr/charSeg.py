@@ -31,7 +31,6 @@ def segmentation(img, slider = (30, 60), step = 2, debug = False):
                            1.0 / 255.0)
 
         if segGraph.run(data) == 1:
-            
             # If is GAP - add possition to sum
             gapPositionSum += position + slider[0] / 2
             gapCount += 1

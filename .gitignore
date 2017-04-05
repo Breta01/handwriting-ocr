@@ -103,3 +103,4 @@ ENV/
 data/
 doc/
 models/backup/
+logs/
