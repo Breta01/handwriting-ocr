@@ -48,10 +48,6 @@ class TrainingPlot:
 
         
     def updateCost(self, lossTrain, index):
-        # Threshold the first loss addition - better graph scale
-        if len(self.trainLoss) == 0 and lossTrain > 2:
-            lossTrain = 2
-            
         self.trainLoss.append(lossTrain)        
         self.ax1.plot(self.lossInterval * np.arange(len(self.trainLoss)),
                       self.trainLoss, 'b', linewidth=1.0)
