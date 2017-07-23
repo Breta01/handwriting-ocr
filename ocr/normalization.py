@@ -8,7 +8,7 @@ import cv2
 from .helpers import *
 
 
-def wordTilt(img, height):
+def wordTilt(img, height, border=True):
     """ Detect the angle for tiltByAngle function """
     edges = cv2.Canny(img, 50, 150, apertureSize = 3)
     lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
@@ -23,7 +23,7 @@ def wordTilt(img, height):
         # Look for angle with correct value
         if meanAngle != 0 and (meanAngle < 0.7 or meanAngle > 2.6):
             img = tiltByAngle(img, meanAngle, height)
-    return cropAddBorder(img, height, 50)
+    return cropAddBorder(img, height, 50, border)
 
         
 def tiltByAngle(img, angle, height):
@@ -59,7 +59,7 @@ def sobelDetect(channel):
     return np.uint8(sobel)
 
 
-def imageNorm(image, height):
+def imageNorm(image, height, border=True, tilt=True):
     """ 
     Preprocess image
     => resize, get edges, tilt world
@@ -70,10 +70,12 @@ def imageNorm(image, height):
  
     edges = sobelDetect(gray)
     ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
-    return wordTilt(th, height)
+    if tilt:
+        return wordTilt(th, height, border)
+    return th
 
 
-def cropAddBorder(img, height, threshold=0):
+def cropAddBorder(img, height, threshold=0, border=True):
     """ Crop and add border to word image of letter segmentation """
     # Clear small values
     ret, img = cv2.threshold(img, 50, 255, cv2.THRESH_TOZERO)
@@ -88,9 +90,12 @@ def cropAddBorder(img, height, threshold=0):
         resize(img[x0:x1, y0:y1], height, True)
     except Exception:
         pass
-    return cv2.copyMakeBorder(img, 0, 0, 15, 15,
-                              cv2.BORDER_CONSTANT,
-                              value=[0, 0, 0])
+    
+    if border:
+        return cv2.copyMakeBorder(img, 0, 0, 15, 15,
+                                  cv2.BORDER_CONSTANT,
+                                  value=[0, 0, 0])
+    return img
 
 
 def resizeLetter(img, size = 56):
