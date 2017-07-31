@@ -18,7 +18,7 @@ def loadWordsData(dataloc='data/words/', debug=False):
     imglist = glob.glob(dataloc + '*.jpg')
     imglist.sort()
     
-    labels = [[name[len(dataloc):].split("_")[0]] for name in imglist]
+    labels = [name[len(dataloc):].split("_")[0] for name in imglist]
     images = np.empty(len(imglist), dtype=object)
     gaplines = np.empty(len(imglist), dtype=object)
     
