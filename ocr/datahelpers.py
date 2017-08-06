@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Helper functions for loading data
+Helper functions for loading and creating datasets
 """
 import numpy as np
 import glob
@@ -18,7 +18,7 @@ def loadWordsData(dataloc='data/words/', debug=False):
     imglist = glob.glob(dataloc + '*.jpg')
     imglist.sort()
     
-    labels = [name[len(dataloc):].split("_")[0] for name in imglist]
+    labels = np.array([name[len(dataloc):].split("_")[0] for name in imglist])
     images = np.empty(len(imglist), dtype=object)
     gaplines = np.empty(len(imglist), dtype=object)
     
@@ -41,3 +41,13 @@ def loadWordsData(dataloc='data/words/', debug=False):
         print("Gaplines:", gaplines[-1])
         
     return (images, labels, gaplines)
+
+
+def correspondingShuffle(a, b):
+    """ 
+    Shuffle two numpy arrays such that
+    each pair a[i] and b[i] remains the same
+    """
+    assert len(a) == len(b)
+    p = np.random.permutation(len(a))
+    return a[p], b[p]
