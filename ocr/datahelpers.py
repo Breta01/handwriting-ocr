@@ -8,39 +8,58 @@ import simplejson
 import cv2
 from .helpers import implt
 
-def loadWordsData(dataloc='data/words/', debug=False):
+def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     """ 
-    Load word images with corresponding labels and gaplines
-    Input: image folder location, debug - for printing example image
-    Returns: (images, labels, gaplines)
+    Load word images with corresponding labels and gaplines (if loadGaplines == True)
+    Input:
+        dataloc      - image folder location - can be list of multiple locations,
+        loadGaplines - wheter or not load gaplines positions files
+        debug        - for printing example image
+    Returns: (images, labels (, gaplines))
     """
     print("Loading words...")
-    imglist = glob.glob(dataloc + '*.jpg')
-    imglist.sort()
+    imglist = []
+    tmpLabels = []
+    if type(dataloc) is list:
+        for loc in dataloc:
+            tmpList = glob.glob(loc + '*.jpg')
+            imglist += tmpList
+            tmpLabels += [name[len(loc):].split("_")[0] for name in tmpList]
+    else:
+        imglist = glob.glob(dataloc + '*.jpg')
+        tmpLabels = [name[len(dataloc):].split("_")[0] for name in imglist]
     
-    labels = np.array([name[len(dataloc):].split("_")[0] for name in imglist])
+    labels = np.array(tmpLabels)
     images = np.empty(len(imglist), dtype=object)
-    gaplines = np.empty(len(imglist), dtype=object)
-    
+
     # Load grayscaled images
     for i, img in enumerate(imglist):
         images[i] = cv2.imread(img, 0)    
     
-    # Load gaplines (separating letters) from txt files
-    for i, name in enumerate(imglist):
-        with open(name[:-3] + 'txt', 'r') as fp:
-            gaplines[i] = simplejson.load(fp)
-
-    assert len(labels) == len(images) == len(gaplines) # Check the same lenght of labels and images
+    # Load gaplines (lines separating letters) from txt files
+    if loadGaplines:
+        gaplines = np.empty(len(imglist), dtype=object)
+        for i, name in enumerate(imglist):
+            with open(name[:-3] + 'txt', 'r') as fp:
+                gaplines[i] = simplejson.load(fp)
+                
+    # Check the same lenght of labels and images
+    if loadGaplines:
+        assert len(labels) == len(images) == len(gaplines)
+    else:
+        assert len(labels) == len(images)
     print("Number of Images:", len(labels))
 
     # Print one of the images (last one)
     if debug:
         implt(images[-1], 'gray', 'Example')
         print("Word:", labels[-1])
-        print("Gaplines:", gaplines[-1])
-        
-    return (images, labels, gaplines)
+        if loadGaplines:
+            print("Gaplines:", gaplines[-1])
+    
+    if loadGaplines:
+        return (images, labels, gaplines)
+    return (images, labels)
 
 
 def correspondingShuffle(a, b):
