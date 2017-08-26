@@ -9,7 +9,7 @@ import cv2
 from .helpers import implt
 
 def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
-    """ 
+    """
     Load word images with corresponding labels and gaplines (if loadGaplines == True)
     Input:
         dataloc      - image folder location - can be list of multiple locations,
@@ -34,14 +34,14 @@ def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
 
     # Load grayscaled images
     for i, img in enumerate(imglist):
-        images[i] = cv2.imread(img, 0)    
+        images[i] = cv2.imread(img, 0)
     
     # Load gaplines (lines separating letters) from txt files
     if loadGaplines:
         gaplines = np.empty(len(imglist), dtype=object)
         for i, name in enumerate(imglist):
             with open(name[:-3] + 'txt', 'r') as fp:
-                gaplines[i] = simplejson.load(fp)
+                gaplines[i] = np.array(simplejson.load(fp))
                 
     # Check the same lenght of labels and images
     if loadGaplines:

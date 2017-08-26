@@ -8,6 +8,29 @@ import cv2
 from .helpers import *
 
 
+def cropAddBorder(img, height, threshold=0, border=True):
+    """ Crop and add border to word image of letter segmentation """
+    # Clear small values
+    ret, img = cv2.threshold(img, 50, 255, cv2.THRESH_TOZERO)
+    # Mask of pixels brighter than threshold
+    mask = img > threshold
+    coords = np.argwhere(mask)
+    try:
+        # Bounding box of non-black pixels.
+        x0, y0 = coords.min(axis=0)
+        x1, y1 = coords.max(axis=0) + 1
+        # Croping image
+        resize(img[x0:x1, y0:y1], height, True)
+    except Exception:
+        pass
+    
+    if border:
+        return cv2.copyMakeBorder(img, 0, 0, 15, 15,
+                                  cv2.BORDER_CONSTANT,
+                                  value=[0, 0, 0])
+    return img
+
+
 def wordTilt(img, height, border=True):
     """ Detect the angle for tiltByAngle function """
     edges = cv2.Canny(img, 50, 150, apertureSize = 3)
@@ -73,29 +96,6 @@ def imageNorm(image, height, border=True, tilt=True):
     if tilt:
         return wordTilt(th, height, border)
     return th
-
-
-def cropAddBorder(img, height, threshold=0, border=True):
-    """ Crop and add border to word image of letter segmentation """
-    # Clear small values
-    ret, img = cv2.threshold(img, 50, 255, cv2.THRESH_TOZERO)
-    # Mask of pixels brighter than threshold
-    mask = img > threshold
-    coords = np.argwhere(mask)
-    try:
-        # Bounding box of non-black pixels.
-        x0, y0 = coords.min(axis=0)
-        x1, y1 = coords.max(axis=0) + 1
-        # Croping image
-        resize(img[x0:x1, y0:y1], height, True)
-    except Exception:
-        pass
-    
-    if border:
-        return cv2.copyMakeBorder(img, 0, 0, 15, 15,
-                                  cv2.BORDER_CONSTANT,
-                                  value=[0, 0, 0])
-    return img
 
 
 def resizeLetter(img, size = 56):
