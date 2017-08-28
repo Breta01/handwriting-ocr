@@ -3,6 +3,7 @@
 Classes for controling machine learning processes
 """
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 
 
@@ -49,6 +50,8 @@ class TrainingPlot:
         
     def updateCost(self, lossTrain, index):
         self.trainLoss.append(lossTrain)        
+        if len(self.trainLoss) == 1:
+            self.ax1.set_ylim([0, min(10, math.ceil(lossTrain))])
         self.ax1.plot(self.lossInterval * np.arange(len(self.trainLoss)),
                       self.trainLoss, 'b', linewidth=1.0)
         
