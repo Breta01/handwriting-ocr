@@ -8,10 +8,9 @@ python graph_optimizer.py \
 
 import os, argparse
 
+import freeze_graph
 import tensorflow as tf
 from tensorflow.python.framework import graph_util
-from tensorflow.core.framework import graph_pb2
-from tensorflow.python.framework import dtypes
 from tensorflow.python.platform import gfile
 from tensorflow.python.tools import optimize_for_inference_lib
 
@@ -21,7 +20,8 @@ fr_name = "_frozen.pb"
 op_name = "_optimized.pb"
 
 
-def freeze_graph(model_folder, output_names):
+def graph_freez(model_folder, output_names):
+    """
     # Retrieve checkpoint fullpath
     checkpoint = tf.train.get_checkpoint_state(model_folder)
     input_checkpoint = checkpoint.model_checkpoint_path
@@ -53,12 +53,33 @@ def freeze_graph(model_folder, output_names):
         print("%d ops in the frozen graph." % len(output_graph_def.node))
 
     return output_graph
+    """
+    checkpoint = tf.train.get_checkpoint_state(model_folder)
+    checkpoint_path = checkpoint.model_checkpoint_path
+    output_graph_filename = checkpoint_path + fr_name
+    print(checkpoint)
+    
+    input_saver_def_path = ""
+    input_binary = True
+#    checkpoint_path = model_folder
+    output_node_names = output_names
+    restore_op_name = "save/restore_all"
+    filename_tensor_name = "save/Const:0"
+    clear_devices = False
+    input_meta_graph = checkpoint_path + ".meta"
+
+    freeze_graph.freeze_graph(
+        "", input_saver_def_path, input_binary, checkpoint_path,
+        output_node_names, restore_op_name, filename_tensor_name,
+        output_graph_filename, clear_devices, "", "", input_meta_graph)
+    
+    return output_graph_filename
   
 
-def optimize_graph(graph_file, input_names, output_names):
+def graph_optimization(graph_file, input_names, output_names):
     output_file = graph_file[:-len(fr_name)] + op_name
 
-    input_graph_def = graph_pb2.GraphDef()
+    input_graph_def = tf.GraphDef()
     with gfile.Open(graph_file, "rb") as f:
         data = f.read()
         input_graph_def.ParseFromString(data)
@@ -67,7 +88,7 @@ def optimize_graph(graph_file, input_names, output_names):
         input_graph_def,
         input_names.split(","),
         output_names.split(","),
-        dtypes.float32.as_datatype_enum)
+        tf.float32.as_datatype_enum)
 
     with gfile.FastGFile(output_file, "wb") as f:
         f.write(output_graph_def.SerializeToString())
@@ -92,5 +113,5 @@ if __name__ == '__main__':
         help="Output node names, comma separated.")
     args = parser.parse_args()
 
-    graph = freeze_graph(args.model_folder, args.output_names)
-    optimize_graph(graph, args.input_names, args.output_names)
+    graph = graph_freez(args.model_folder, args.output_names)
+    graph_optimization(graph, args.input_names, args.output_names)
