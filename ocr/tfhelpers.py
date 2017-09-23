@@ -27,6 +27,11 @@ class Graph():
         """ Run the specified operation on given data """
         return self.sess.run(self.op, feed_dict={self.input: data})
     
+    def eval_feed(self, feed):
+        """ Run the specified operation with given feed """
+        return self.sess.run(self.op, feed_dict=feed)
+        
+    
     
 def create_single_cell(cell_fn, num_units, is_residual=False, is_dropout=False, keep_prob=None):
     """ Create single RNN cell based on cell_fn"""
