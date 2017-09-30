@@ -5,6 +5,7 @@ Classes for controling machine learning processes
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import csv
 
 
 class TrainingPlot:
@@ -45,8 +46,7 @@ class TrainingPlot:
 
         
     def updatePlot(self):        
-        self.fig.canvas.draw()
-
+        self.fig.canvas.draw()        
         
     def updateCost(self, lossTrain, index):
         self.trainLoss.append(lossTrain)        
