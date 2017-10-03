@@ -8,53 +8,63 @@ import cv2
 # Preloading trained model with activation function
 # Loading is slow -> prevent multiple loads
 print("Loading Segmantation model:")
-segGraph = Graph('models/gap-clas/CNN-CG')
+segCNNGraph = Graph('models/gap-clas/CNN-CG')
+segRNNGraph = Graph('models/gap-clas/RNN/Bi-RNN', 'prediction')
 
-def segmentation(img, slider = (30, 60), step = 2, debug = False):
+def segmentation(img, slider=(60, 30), step=2, RNN=False, debug=False):
     """
     Take preprocessed image of word
     and return array of positions separating chars - gaps
     """
+    length = (img.shape[1] - slider[1]) // 2 + 1
+    if RNN:
+        input_seq = np.zeros((1, length, slider[0]*slider[1]), dtype=np.float32)
+        input_seq[0][:] = [img[:, loc * step: loc * step + slider[1]].flatten()
+                           for loc in range(length)]
+        pred = segRNNGraph.eval_feed({'inputs:0': input_seq,
+                                      'length:0': [length],
+                                      'keep_prob:0': 1})
+    else:
+        input_seq = np.zeros((length, slider[0]*slider[1]), dtype=np.float32)
+        input_seq[:] = [img[:, loc * step: loc * step + slider[1]].flatten()
+                        for loc in range(length)]
+        pred = segCNNGraph.run(input_seq)
+
     gaps = []
-    position = 0
 
-    separate = False
-    isPrevGap = True
+    lastGap = 0
     gapCount = 1
-    gapPositionSum = position + slider[0] / 2
+    gapPositionSum = slider[1] / 2
+    first = True
+    gapBlockFirst = 0
+    gapBlockLast = slider[1]/2
 
-    while position < len(img[0]) - slider[0]:
-        current = img[0:slider[1], position:position + slider[0]]
-        # CharGapClassifier prediction
-        # Pixel transform and rescale
-        data = np.multiply(np.reshape(current, (1, 1800)).astype(np.float32),
-                           1.0 / 255.0)
-
-        if segGraph.run(data) == 1:
-            # If is GAP - add possition to sum
-            gapPositionSum += position + slider[0] / 2
+    for i, p in enumerate(pred):
+        if p == 1:
+            gapPositionSum += i * step + slider[1] / 2
+            gapBlockLast = i * step + slider[1] / 2
             gapCount += 1
-            isPrevGap = True
-            separate = False
+            lastGap = 0
+            if gapBlockFirst == 0:
+                gapBlockFirst = i * step + slider[1] / 2
         else:
-            # Add gap position into array
-            # only if two successive letter lines detected
-            if not separate and isPrevGap:
-                separate = True
-            elif separate:
-                gaps.append((int)(gapPositionSum / gapCount))
+            if gapCount != 0 and lastGap >= 1:
+                if first:
+                    gaps.append(int(gapBlockLast))
+                    first = False
+                else:
+                    gaps.append(int(gapPositionSum // gapCount))
                 gapPositionSum = 0
                 gapCount = 0
-                separate = False
-    
-            isPrevGap = False
-        # Sliding forward
-        position += step
+            lastGap += 1
 
-    # Adding last line
-    gapPositionSum += position + slider[0] / 2
-    gapCount += 1
-    gaps.append((int)(gapPositionSum / gapCount))
+    # Adding final gap position
+    if gapBlockFirst != 0:
+        gaps.append(int(gapBlockLast))
+    else:
+        gapPositionSum += (lenght - 1) * 2 + slider[1]/2
+        gaps.append(int(gapPositionSum / (gapCount + 1)))
+        
     if debug:
         # Drawing lines
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -64,4 +74,5 @@ def segmentation(img, slider = (30, 60), step = 2, debug = False):
                      ((int)(gap), slider[1]),
                      (0, 255, 0), 1)
         implt(img, t="Separated characters")
+        
     return gaps

@@ -8,21 +8,31 @@ import cv2
 from .helpers import *
 
 
-def cropAddBorder(img, height, threshold=0, border=True):
+def cropAddBorder(img, height, threshold=50, border=True):
     """ Crop and add border to word image of letter segmentation """
     # Clear small values
-    ret, img = cv2.threshold(img, 50, 255, cv2.THRESH_TOZERO)
-    # Mask of pixels brighter than threshold
-    mask = img > threshold
-    coords = np.argwhere(mask)
-    try:
-        # Bounding box of non-black pixels.
-        x0, y0 = coords.min(axis=0)
-        x1, y1 = coords.max(axis=0) + 1
-        # Croping image
+    ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
+    
+    x0 = 0
+    y0 = 0
+    x1 = 0
+    y1 = 0
+
+    for i in range(img.shape[0]):
+        if np.count_nonzero(img[i, :]) > 1:
+            y0 = i
+    for i in reversed(range(img.shape[0])):
+        if np.count_nonzero(img[i, :]) > 1:
+            y1 = i
+    for i in range(img.shape[1]):
+        if np.count_nonzero(img[:, i]) > 1:
+            x0 = i
+    for i in reversed(range(img.shape[1])):
+        if np.count_nonzero(img[:, i]) > 1:
+            x1 = i
+    
+    if height != 0:
         resize(img[x0:x1, y0:y1], height, True)
-    except Exception:
-        pass
     
     if border:
         return cv2.copyMakeBorder(img, 0, 0, 15, 15,
@@ -108,19 +118,21 @@ def resizeLetter(img, size = 56):
         return cv2.resize(img, (size, int(rat * img.shape[0])))
     return img
 
+# DEPRECEDENT, DEL IN NEXT COMMIT
+# def autocrop(image, threshold=80):
+#     """ Crops edges below or equal to threshold """
+#     rows = np.where(np.max(image, 0) > threshold)[0]
+#     cols = np.where(np.max(image, 1) > threshold)[0]
+#     image = image[cols[0]:cols[-1] + 1, rows[0]:rows[-1] + 1]
+#     return image
 
-def autocrop(image, threshold=80):
-    """ Crops edges below or equal to threshold """
-    rows = np.where(np.max(image, 0) > threshold)[0]
-    cols = np.where(np.max(image, 1) > threshold)[0]
-    image = image[cols[0]:cols[-1] + 1, rows[0]:rows[-1] + 1]
-    return image
 
-
-def letterNorm(image):
+def letterNorm(image, dim=False):
     """ Preprocess an image - crop """
-    image = autocrop(image)
-    resized = resizeLetter(image)
+    image = cropAddBorder(image, height=0, threshold=80, border=False)
+    resized = image
+    if image.shape[0] > 0 and image.shape[1] > 0:
+        resized = resizeLetter(image)
     
     result = np.zeros((64, 64), np.uint8)
     offset = [0, 0]
@@ -132,4 +144,7 @@ def letterNorm(image):
     # Replace zeros by image 
     result[offset[1]:offset[1] + resized.shape[0],
            offset[0]:offset[0] + resized.shape[1]] = resized
+    
+    if dim:
+        return result, image.shape    
     return result

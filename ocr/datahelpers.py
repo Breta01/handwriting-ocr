@@ -60,10 +60,12 @@ def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     tmpLabels = []
     if type(dataloc) is list:
         for loc in dataloc:
+            loc += '/' if loc[-1] != '/' else ''
             tmpList = glob.glob(loc + '*.jpg')
             imglist += tmpList
             tmpLabels += [name[len(loc):].split("_")[0] for name in tmpList]
     else:
+        dataloc += '/' if dataloc[-1] != '/' else ''
         imglist = glob.glob(dataloc + '*.jpg')
         tmpLabels = [name[len(dataloc):].split("_")[0] for name in imglist]
     
