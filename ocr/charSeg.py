@@ -4,18 +4,21 @@ import tensorflow as tf
 from .helpers import *
 from .tfhelpers import Graph
 import cv2
+import math
 
 # Preloading trained model with activation function
 # Loading is slow -> prevent multiple loads
 print("Loading Segmantation model:")
 segCNNGraph = Graph('models/gap-clas/CNN-CG')
+segLargeCNNGraph = Graph('models/gap-clas/large/CNN-CG')
 segRNNGraph = Graph('models/gap-clas/RNN/Bi-RNN', 'prediction')
 
-def segmentation(img, slider=(60, 30), step=2, RNN=False, debug=False):
-    """
-    Take preprocessed image of word
-    and return array of positions separating chars - gaps
-    """
+def classify(img, step=2, RNN=False, large=False):
+    if large:
+        slider = (60, 120)
+    else:
+        slider = (60, 30)
+        
     length = (img.shape[1] - slider[1]) // 2 + 1
     if RNN:
         input_seq = np.zeros((1, length, slider[0]*slider[1]), dtype=np.float32)
@@ -23,19 +26,38 @@ def segmentation(img, slider=(60, 30), step=2, RNN=False, debug=False):
                            for loc in range(length)]
         pred = segRNNGraph.eval_feed({'inputs:0': input_seq,
                                       'length:0': [length],
-                                      'keep_prob:0': 1})
+                                      'keep_prob:0': 1})[0]
     else:
         input_seq = np.zeros((length, slider[0]*slider[1]), dtype=np.float32)
         input_seq[:] = [img[:, loc * step: loc * step + slider[1]].flatten()
                         for loc in range(length)]
-        pred = segCNNGraph.run(input_seq)
+        if large:
+            pred = segLargeCNNGraph.run(input_seq)
+        else:
+            pred = segCNNGraph.run(input_seq)
+        
+    return pred
+    
+
+def segmentation(img, step=2, RNN=False, large=False, debug=False):
+    """
+    Take preprocessed image of word
+    and return array of positions separating chars - gaps
+    """        
+    if large:
+        slider = (60, 120)
+    else:
+        slider = (60, 30)
+    length = (img.shape[1] - slider[1]) // 2 + 1
+    
+    pred = classify(img, step, RNN, large)
 
     gaps = []
 
     lastGap = 0
     gapCount = 1
     gapPositionSum = slider[1] / 2
-    first = True
+    firstGap = True
     gapBlockFirst = 0
     gapBlockLast = slider[1]/2
 
@@ -49,20 +71,21 @@ def segmentation(img, slider=(60, 30), step=2, RNN=False, debug=False):
                 gapBlockFirst = i * step + slider[1] / 2
         else:
             if gapCount != 0 and lastGap >= 1:
-                if first:
+                if firstGap:
                     gaps.append(int(gapBlockLast))
-                    first = False
+                    firstGap = False
                 else:
                     gaps.append(int(gapPositionSum // gapCount))
                 gapPositionSum = 0
                 gapCount = 0
+            gapBlockFirst = 0
             lastGap += 1
 
     # Adding final gap position
     if gapBlockFirst != 0:
-        gaps.append(int(gapBlockLast))
+        gaps.append(int(gapBlockFirst))
     else:
-        gapPositionSum += (lenght - 1) * 2 + slider[1]/2
+        gapPositionSum += (length - 1) * 2 + slider[1]/2
         gaps.append(int(gapPositionSum / (gapCount + 1)))
         
     if debug:

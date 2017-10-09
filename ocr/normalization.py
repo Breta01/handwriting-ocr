@@ -8,40 +8,44 @@ import cv2
 from .helpers import *
 
 
-def cropAddBorder(img, height, threshold=50, border=True):
+def cropAddBorder(img, height, threshold=50, border=True, borderSize=15):
     """ Crop and add border to word image of letter segmentation """
     # Clear small values
     ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
     
     x0 = 0
     y0 = 0
-    x1 = 0
-    y1 = 0
+    x1 = img.shape[1]
+    y1 = img.shape[0]
 
     for i in range(img.shape[0]):
         if np.count_nonzero(img[i, :]) > 1:
             y0 = i
+            break
     for i in reversed(range(img.shape[0])):
         if np.count_nonzero(img[i, :]) > 1:
             y1 = i
+            break
     for i in range(img.shape[1]):
         if np.count_nonzero(img[:, i]) > 1:
             x0 = i
+            break
     for i in reversed(range(img.shape[1])):
         if np.count_nonzero(img[:, i]) > 1:
             x1 = i
+            break
     
     if height != 0:
         resize(img[x0:x1, y0:y1], height, True)
     
     if border:
-        return cv2.copyMakeBorder(img, 0, 0, 15, 15,
+        return cv2.copyMakeBorder(img, 0, 0, borderSize, borderSize,
                                   cv2.BORDER_CONSTANT,
                                   value=[0, 0, 0])
     return img
 
 
-def wordTilt(img, height, border=True):
+def wordTilt(img, height, border=True, borderSize=15):
     """ Detect the angle for tiltByAngle function """
     edges = cv2.Canny(img, 50, 150, apertureSize = 3)
     lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
@@ -56,7 +60,7 @@ def wordTilt(img, height, border=True):
         # Look for angle with correct value
         if meanAngle != 0 and (meanAngle < 0.7 or meanAngle > 2.6):
             img = tiltByAngle(img, meanAngle, height)
-    return cropAddBorder(img, height, 50, border)
+    return cropAddBorder(img, height, 50, border, borderSize)
 
         
 def tiltByAngle(img, angle, height):
@@ -92,7 +96,7 @@ def sobelDetect(channel):
     return np.uint8(sobel)
 
 
-def imageNorm(image, height, border=True, tilt=True):
+def imageNorm(image, height, border=True, tilt=True, borderSize=15):
     """ 
     Preprocess image
     => resize, get edges, tilt world
@@ -104,7 +108,7 @@ def imageNorm(image, height, border=True, tilt=True):
     edges = sobelDetect(gray)
     ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
     if tilt:
-        return wordTilt(th, height, border)
+        return wordTilt(th, height, border, borderSize)
     return th
 
 

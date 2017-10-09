@@ -6,11 +6,12 @@ import numpy as np
 import glob
 import simplejson
 import cv2
+import unidecode
 from .helpers import implt
 from .normalization import letterNorm
 
 
-CHARS_CZ = ['0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+CHARS_CZ = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
             'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
             'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -20,7 +21,7 @@ CHARS_CZ = ['0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'ě', 'Ň', 'ň', 'Ř', 'ř', 'Š', 'š', 'Ť', 'ť', 'Ů',
             'ů', 'Ž', 'ž']
 
-CHARS_EN = ['0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+CHARS_EN = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
             'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
             'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -102,7 +103,7 @@ def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     return (images, labels)
 
 
-def words2chars(images, labels, gaplines):
+def words2chars(images, labels, gaplines, lang='cz'):
     """ Transform word images with gaplines into individual chars """
     # Total number of chars
     length = sum([len(l) for l in labels])
@@ -116,7 +117,10 @@ def words2chars(images, labels, gaplines):
     for i, gaps in enumerate(gaplines):
         for pos in range(len(gaps) - 1):
             imgs[idx] = images[i][0:height, gaps[pos]:gaps[pos+1]]
-            newLabels.append(char2idx(labels[i][pos]))
+            if lang == 'cz':
+                newLabels.append(char2idx(labels[i][pos]))
+            else:
+                newLabels.append(char2idx(unidecode.unidecode(labels[i][pos]), lang))
             idx += 1
            
     print("Loaded chars from words:", length)            
@@ -134,12 +138,14 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', us
     print("Loading chars...")
     # Get subfolders with chars
     dirlist = glob.glob(charloc + lang + "/*/")
-    dirlist.sort()
+    dirlist.sort()    
 
     if lang == 'en':
         chars = CHARS_EN
     else:
         chars = CHARS_CZ
+    
+    assert [d[-2] if d[-2] != '0' else '' for d in dirlist] == chars
     
     images = np.zeros((1, 4096))
     labels = []   
@@ -155,7 +161,7 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', us
         
     if useWords:    
         imgs, words, gaplines = loadWordsData(wordloc)
-        imgs, chars = words2chars(imgs, words, gaplines)
+        imgs, chars = words2chars(imgs, words, gaplines, lang)
         
         labels.extend(chars)
         for i in range(len(imgs)):
@@ -167,6 +173,42 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', us
     
     print("-> Number of chars:", len(labels))
     return (images, labels)
+
+
+def loadGapData(loc='data/gapdet/large/', seq=False):
+    """ Load gap data from location with corresponding labels """
+    print('Loading gap data...')
+    loc += '/' if loc[-1] != '/' else ''
+    dirlist = glob.glob(loc + "*/")
+    
+    if seq:
+        images = np.empty(len(dirlist), dtype=object)
+        labels = np.empty(len(dirlist), dtype=object)
+        
+        for i, loc in enumerate(dirlist):
+            imgList = glob.glob(loc + '*.jpg')
+            images[i] = np.array([cv2.imread(img, 0) for img in imgList])
+            labels[i] = np.array([name[len(loc):].split("_")[0] for name in imgList])
+        
+    else:
+        images = np.zeros((1, 60*120))
+        labels = []
+
+        for i in range(len(dirlist)):
+            imglist = glob.glob(dirlist[i] + '*.jpg')
+            imgs = np.array([cv2.imread(img, 0) for img in imglist])
+            images = np.concatenate([images, imgs.reshape(len(imgs), 60*120)])
+            labels.extend([int(img[len(dirlist[i])]) for img in imglist])
+
+        images = images[1:]
+        labels = np.array(labels)
+    
+    if seq:
+        print("-> Number of words / gaps and letters:",
+              len(labels), '/', sum([len(l) for l in labels]))
+    else:
+        print("-> Number of gaps and letters:", len(labels))
+    return (images, labels)    
 
 
 def correspondingShuffle(a, b):
