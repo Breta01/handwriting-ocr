@@ -12,9 +12,12 @@ print("Loading Segmantation model:")
 segCNNGraph = Graph('models/gap-clas/CNN-CG')
 segLargeCNNGraph = Graph('models/gap-clas/large/CNN-CG')
 segRNNGraph = Graph('models/gap-clas/RNN/Bi-RNN', 'prediction')
+segRNNDenseGraph = Graph('models/gap-clas/RNN/Bi-RNN-dense', 'prediction')
 
 def classify(img, step=2, RNN=False, large=False):
-    if large:
+    if large and RNN:
+        slider = (60, 60)
+    elif large:
         slider = (60, 120)
     else:
         slider = (60, 30)
@@ -24,9 +27,14 @@ def classify(img, step=2, RNN=False, large=False):
         input_seq = np.zeros((1, length, slider[0]*slider[1]), dtype=np.float32)
         input_seq[0][:] = [img[:, loc * step: loc * step + slider[1]].flatten()
                            for loc in range(length)]
-        pred = segRNNGraph.eval_feed({'inputs:0': input_seq,
-                                      'length:0': [length],
-                                      'keep_prob:0': 1})[0]
+        if large:
+            pred = segRNNDenseGraph.eval_feed({'inputs:0': input_seq,
+                                               'length:0': [length],
+                                               'keep_prob:0': 1})[0]
+        else:
+            pred = segRNNGraph.eval_feed({'inputs:0': input_seq,
+                                          'length:0': [length],
+                                          'keep_prob:0': 1})[0]
     else:
         input_seq = np.zeros((length, slider[0]*slider[1]), dtype=np.float32)
         input_seq[:] = [img[:, loc * step: loc * step + slider[1]].flatten()

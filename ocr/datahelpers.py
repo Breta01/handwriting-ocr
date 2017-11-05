@@ -175,29 +175,40 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', us
     return (images, labels)
 
 
-def loadGapData(loc='data/gapdet/large/', seq=False):
+def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=True):
     """ Load gap data from location with corresponding labels """
     print('Loading gap data...')
     loc += '/' if loc[-1] != '/' else ''
     dirlist = glob.glob(loc + "*/")
+    dirlist.sort()
+    
+    if slider[1] > 120:
+        # TODO Implement for higher dimmensions
+        slider[1] = 120
+        
+    cut = None if (120 - slider[1]) // 2 <= 0 else (120 - slider[1]) // 2
     
     if seq:
         images = np.empty(len(dirlist), dtype=object)
         labels = np.empty(len(dirlist), dtype=object)
         
         for i, loc in enumerate(dirlist):
+            # TODO Check for empty directories
             imgList = glob.glob(loc + '*.jpg')
-            images[i] = np.array([cv2.imread(img, 0) for img in imgList])
-            labels[i] = np.array([name[len(loc):].split("_")[0] for name in imgList])
+            imgList = sorted(imgList, key=lambda x: int(x[len(loc):].split("_")[1][:-4]))
+            images[i] = np.array([(cv2.imread(img, 0)[:, cut:-cut].flatten() if flatten else
+                                   cv2.imread(img, 0)[:, cut:-cut])
+                                  for img in imgList])
+            labels[i] = np.array([int(name[len(loc):].split("_")[0]) for name in imgList])
         
     else:
-        images = np.zeros((1, 60*120))
+        images = np.zeros((1, slider[0]*slider[1]))
         labels = []
 
         for i in range(len(dirlist)):
             imglist = glob.glob(dirlist[i] + '*.jpg')
-            imgs = np.array([cv2.imread(img, 0) for img in imglist])
-            images = np.concatenate([images, imgs.reshape(len(imgs), 60*120)])
+            imgs = np.array([cv2.imread(img, 0)[:, cut:-cut] for img in imglist])
+            images = np.concatenate([images, imgs.reshape(len(imgs), slider[0]*slider[1])])
             labels.extend([int(img[len(dirlist[i])]) for img in imglist])
 
         images = images[1:]

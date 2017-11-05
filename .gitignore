@@ -102,6 +102,6 @@ ENV/
 # They're too big
 data/
 doc/
-models/backup/
+models/
 logs/
 *.pb
