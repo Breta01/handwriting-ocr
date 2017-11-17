@@ -50,11 +50,12 @@ def idx2char(idx, lang='cz'):
 def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     """
     Load word images with corresponding labels and gaplines (if loadGaplines == True)
-    Input:
-        dataloc      - image folder location - can be list of multiple locations,
-        loadGaplines - wheter or not load gaplines positions files
-        debug        - for printing example image
-    Returns: (images, labels (, gaplines))
+    Args:
+        dataloc: image folder location - can be list of multiple locations,
+        loadGaplines: wheter or not load gaplines positions files
+        debug: for printing example image
+    Returns:
+        (images, labels (, gaplines))
     """
     print("Loading words...")
     imglist = []
@@ -130,10 +131,11 @@ def words2chars(images, labels, gaplines, lang='cz'):
 def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', useWords=True):
     """
     Load chars images with corresponding labels
-    Input:
-        charloc      - char images FOLDER LOCATION
-        wordloc      - word images with gaplines FOLDER LOCATION
-    Returns: (images, labels)
+    Args:
+        charloc: char images FOLDER LOCATION
+        wordloc: word images with gaplines FOLDER LOCATION
+    Returns:
+        (images, labels)
     """
     print("Loading chars...")
     # Get subfolders with chars
@@ -222,11 +224,17 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
     return (images, labels)    
 
 
-def correspondingShuffle(a, b):
+def correspondingShuffle(a):
     """ 
-    Shuffle two numpy arrays such that
-    each pair a[i] and b[i] remains the same
+    Shuffle array of numpy arrays such that
+    each pair a[x][i] and a[y][i] remains the same
+    Args:
+        a: array of same length numpy arrays
+    Returns:
+        Array a with shuffled numpy arrays
     """
-    assert len(a) == len(b)
-    p = np.random.permutation(len(a))
-    return a[p], b[p]
+    assert all([len(a[0]) == len(a[i]) for i in range(len(a))])
+    p = np.random.permutation(len(a[0]))
+    for i in range(len(a)):
+        a[i] = a[i][p]
+    return a
