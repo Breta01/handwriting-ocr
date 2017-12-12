@@ -105,17 +105,68 @@ def sobelDetect(channel):
     return np.uint8(sobel)
 
 
-def imageNorm(image, height, border=True, tilt=True, borderSize=15):
+class HysterThresh:    
+    def __init__(self, img):
+        img = 255 - img
+        img = (img - np.min(img)) / (np.max(img) - np.min(img)) * 255        
+        hist, bins = np.histogram(img.ravel(), 256, [0,256])
+        
+        self.high = np.argmax(hist) + 100
+        self.low = np.argmax(hist) + 25
+        self.diff = 255 - self.high
+        
+        self.img = img
+        self.im = np.zeros(img.shape, dtype=img.dtype)
+        
+    def getImage(self):
+        self.hyster()
+        return np.uint8(self.im)
+        
+    def hyster_rec(self, r, c):
+        h, w = self.img.shape
+        for ri in range(r-1, r+2):
+            for ci in range(c-1, c+2):
+                if (h > ri >= 0
+                    and w > ci >= 0
+                    and self.im[ri, ci] == 0
+                    and self.high > self.img[ri, ci] >= self.low):                    
+                    self.im[ri, ci] = self.img[ri, ci] + self.diff
+                    self.hyster_rec(ri, ci)                      
+    
+    def hyster(self):
+        r, c = self.img.shape
+        for ri in range(r):
+            for ci in range(c):
+                if (self.img[ri, ci] >= self.high):
+                    self.im[ri, ci] = 255
+                    self.img[ri, ci] = 255
+                    self.hyster_rec(ri, ci)
+
+
+def hystImageNorm(image):
+    """ Word normalization using hystheresis thresholding """
+    # TODO try cvtColor before and after BilateralFilter
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    img = cv2.bilateralFilter(gray, 0, 10, 30)   
+    return HysterThresh(img).getImage()
+
+
+def imageNorm(image, height, border=True, tilt=True, borderSize=15, hystNorm=False):
     """ 
     Preprocess image
     => resize, get edges, tilt world
     """
     image = resize(image, height, True)
-    img = cv2.bilateralFilter(image, 0, 30, 30)
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
- 
-    edges = sobelDetect(gray)
-    ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
+    
+    if hystNorm:
+        th = hystImageNorm(image)
+    else:
+        img = cv2.bilateralFilter(image, 0, 30, 30)
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+        edges = sobelDetect(gray)
+        ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
+    
     if tilt:
         return wordTilt(th, height, border, borderSize)
     return th
