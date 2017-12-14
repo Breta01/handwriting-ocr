@@ -112,7 +112,7 @@ class HysterThresh:
         hist, bins = np.histogram(img.ravel(), 256, [0,256])
         
         self.high = np.argmax(hist) + 100
-        self.low = np.argmax(hist) + 25
+        self.low = np.argmax(hist) + 45
         self.diff = 255 - self.high
         
         self.img = img
@@ -144,10 +144,10 @@ class HysterThresh:
 
 
 def hystImageNorm(image):
-    """ Word normalization using hystheresis thresholding """
-    # TODO try cvtColor before and after BilateralFilter
+    """ Word normalization using hystheresis thresholding """   
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    img = cv2.bilateralFilter(gray, 0, 10, 30)   
+#     img = cv2.bilateralFilter(gray, 0, 10, 30)
+    img = cv2.bilateralFilter(gray, 0, 15, 30)      
     return HysterThresh(img).getImage()
 
 

@@ -63,7 +63,7 @@ def textDetect(img, image):
         r = cv2.countNonZero(maskROI) / (w * h)
         
         # Limits for text
-        if r > 0.1 and 1600 > w > 10 and 1600 > h > 10:
+        if r > 0.1 and 1600 > w > 10 and 1600 > h > 10 and  (60 // h) * w < 1000:
             cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
             boundingBoxes = np.vstack((boundingBoxes,
                                        np.array([x, y, x+w, y+h])))
