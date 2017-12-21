@@ -41,12 +41,12 @@ def cropAddBorder(img, height, threshold=50, border=True, borderSize=15):
         if np.count_nonzero(img[:, i]) > 1:
             x1 = i+1
             break
-    
+
     if height != 0:
         img = resize(img[y0:y1, x0:x1], height, True)
     else:
         img = img[y0:y1, x0:x1]
-    
+
     if border:
         return cv2.copyMakeBorder(img, 0, 0, borderSize, borderSize,
                                   cv2.BORDER_CONSTANT,
@@ -58,7 +58,7 @@ def wordTilt(img, height, border=True, borderSize=15):
     """ Detect the angle for tiltByAngle function """
     edges = cv2.Canny(img, 50, 150, apertureSize = 3)
     lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
-    
+
     if lines is not None:
         meanAngle = 0
         # Set min number of valid lines (try higher)
@@ -71,13 +71,13 @@ def wordTilt(img, height, border=True, borderSize=15):
             img = tiltByAngle(img, meanAngle, height)
     return cropAddBorder(img, height, 50, border, borderSize)
 
-        
+
 def tiltByAngle(img, angle, height):
     """ Tilt the image by given angle """
     dist = np.tan(angle) * height
     width = len(img[0])
     sPoints = np.float32([[0,0], [0,height], [width,height], [width,0]])
-    
+
     # Dist is positive for angle < 0.7; negative for angle > 2.6
     # Image must be shifed to right
     if dist > 0:
@@ -105,23 +105,23 @@ def sobelDetect(channel):
     return np.uint8(sobel)
 
 
-class HysterThresh:    
+class HysterThresh:
     def __init__(self, img):
         img = 255 - img
-        img = (img - np.min(img)) / (np.max(img) - np.min(img)) * 255        
+        img = (img - np.min(img)) / (np.max(img) - np.min(img)) * 255
         hist, bins = np.histogram(img.ravel(), 256, [0,256])
-        
-        self.high = np.argmax(hist) + 100
+
+        self.high = np.argmax(hist) + 65
         self.low = np.argmax(hist) + 45
         self.diff = 255 - self.high
-        
+
         self.img = img
         self.im = np.zeros(img.shape, dtype=img.dtype)
-        
+
     def getImage(self):
         self.hyster()
         return np.uint8(self.im)
-        
+
     def hyster_rec(self, r, c):
         h, w = self.img.shape
         for ri in range(r-1, r+2):
@@ -129,10 +129,10 @@ class HysterThresh:
                 if (h > ri >= 0
                     and w > ci >= 0
                     and self.im[ri, ci] == 0
-                    and self.high > self.img[ri, ci] >= self.low):                    
+                    and self.high > self.img[ri, ci] >= self.low):
                     self.im[ri, ci] = self.img[ri, ci] + self.diff
-                    self.hyster_rec(ri, ci)                      
-    
+                    self.hyster_rec(ri, ci)
+
     def hyster(self):
         r, c = self.img.shape
         for ri in range(r):
@@ -144,10 +144,10 @@ class HysterThresh:
 
 
 def hystImageNorm(image):
-    """ Word normalization using hystheresis thresholding """   
+    """ Word normalization using hystheresis thresholding """
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 #     img = cv2.bilateralFilter(gray, 0, 10, 30)
-    img = cv2.bilateralFilter(gray, 0, 15, 30)      
+    img = cv2.bilateralFilter(gray, 0, 15, 30)
     return HysterThresh(img).getImage()
 
 
@@ -157,7 +157,7 @@ def imageNorm(image, height, border=True, tilt=True, borderSize=15, hystNorm=Fal
     => resize, get edges, tilt world
     """
     image = resize(image, height, True)
-    
+
     if hystNorm:
         th = hystImageNorm(image)
     else:
@@ -166,7 +166,7 @@ def imageNorm(image, height, border=True, tilt=True, borderSize=15, hystNorm=Fal
 
         edges = sobelDetect(gray)
         ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
-    
+
     if tilt:
         return wordTilt(th, height, border, borderSize)
     return th
@@ -191,7 +191,7 @@ def letterNorm(image, is_thresh=True, dim=False):
     resized = image
     if image.shape[0] > 1 and image.shape[1] > 1:
         resized = resizeLetter(image)
-    
+
     result = np.zeros((64, 64), np.uint8)
     offset = [0, 0]
     # Calculate offset for smaller size
@@ -202,7 +202,7 @@ def letterNorm(image, is_thresh=True, dim=False):
     # Replace zeros by image 
     result[offset[1]:offset[1] + resized.shape[0],
            offset[0]:offset[0] + resized.shape[1]] = resized
-    
+
     if dim:
-        return result, image.shape    
+        return result, image.shape
     return result

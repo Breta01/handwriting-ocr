@@ -1,4 +1,5 @@
 """
+Last: 1095
 Script with simple UI for creating gaplines data
 Run: python WordClassDM.py --index 0
 Controls:
@@ -16,7 +17,7 @@ from ocr.normalization import imageNorm
 from ocr.viz import printProgressBar
 
 
-def loadImages(dataloc):
+def loadImages(dataloc, idx=0):
     """ Load images and labels """
     print("Loading words...")
 
@@ -31,14 +32,15 @@ def loadImages(dataloc):
 
     for i, img in enumerate(imglist):
         # TODO Speed up loading - Normalization
-        images[i] = imageNorm(
-            cv2.cvtColor(cv2.imread(img), cv2.COLOR_BGR2RGB),
-            height=60,
-            border=False,
-            tilt=True,
-            hystNorm=True)
+        if i >= idx:
+            images[i] = imageNorm(
+                cv2.cvtColor(cv2.imread(img), cv2.COLOR_BGR2RGB),
+                height=60,
+                border=False,
+                tilt=True,
+                hystNorm=True)
         printProgressBar(i, len(imglist))
-    return (images, labels)
+    return (images[idx:], labels[idx:])
 
 
 class Cycler:
@@ -47,8 +49,9 @@ class Cycler:
 
     def __init__(self, idx, loc='data/words_raw'):
         """ Load images and starts from given index """
-        self.images, self.labels = loadImages(loc)
-        self.idx = idx
+        self.images, self.labels = loadImages(loc, idx)
+        self.idx = 0
+        self.org_idx = idx
         self.image_act = self.images[self.idx]
         cv2.namedWindow('image')
         self.nextImage()
@@ -68,11 +71,15 @@ class Cycler:
             elif k == ord('s'):
                 # Save gaplines with image
                 self.saveData()
+            elif k == ord('n'):
+                # Skip to next image
+                self.idx += 1
+                self.nextImage()
             elif k == 27:
                 cv2.destroyAllWindows()
                 break
 
-        print("End of labeling at INDEX: " + str(cycler.idx))
+        print("End of labeling at INDEX: " + str(self.org_idx + self.idx))
 
     def imageShow(self):
         cv2.imshow(
@@ -91,7 +98,7 @@ class Cycler:
         for x in self.gaplines:
             self.drawLine(x)
 
-        print(self.idx, ":", self.label_act.split("_")[0])
+        print(self.org_idx + self.idx, ":", self.label_act.split("_")[0])
         self.imageShow();
 
     def saveData(self):
