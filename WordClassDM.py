@@ -1,5 +1,5 @@
 """
-Last: 2345
+Last: 5069
 
 Script with simple UI for creating gaplines data
 Run: python WordClassDM.py --index 0
@@ -37,7 +37,7 @@ def loadImages(dataloc, idx=0, num=None):
     if num is None:
         upper = len(imglist)
     else:
-        upper = idx + num
+        upper = min(idx + num, len(imglist))
         num += idx
 
     for i, img in enumerate(imglist):
