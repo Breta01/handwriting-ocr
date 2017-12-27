@@ -9,7 +9,7 @@ Proces of recognition is divided into 5 steps, starting with photo of page with 
 3. Normalization of words
 4. Separation and recegnition of characters (recognition of words)
 
-Main files combining all the steps are [OCR.ipynb](OCR.ipynb) and [OCR-Evaluator.ipynb](OCR-Evaluator.ipynb). Naming of files goes by step representing - name of machine learning model. `DM` stands for notebooks for creating of dataset.
+Main files combining all the steps are [OCR.ipynb](OCR.ipynb) and [OCR-Evaluator.ipynb](OCR-Evaluator.ipynb). Naming of files goes by step representing - name of machine learning model. Notebooks ending with `DM` stands for creation of dataset.
 
 ## Getting Started
 ### Requirements
@@ -27,4 +27,4 @@ With all required libraries installed clone the repo and run `jupyter notebook` 
 Best way how to get involved is through creating [GitHub issues](https://github.com/Breta01/handwriting-ocr/issues) or solving one! If there aren't any issues you can contact me directly on email.
 
 ## License
-** MIT **
+**MIT**
