@@ -9,6 +9,7 @@ import cv2
 import unidecode
 from .helpers import implt
 from .normalization import letterNorm
+from .viz import printProgressBar
 
 
 CHARS_CZ = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
@@ -128,7 +129,7 @@ def words2chars(images, labels, gaplines, lang='cz'):
     return imgs, newLabels
 
 
-def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', useWords=True):
+def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
     """
     Load chars images with corresponding labels
     Args:
@@ -138,35 +139,37 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz', us
         (images, labels)
     """
     print("Loading chars...")
-    # Get subfolders with chars
-    dirlist = glob.glob(charloc + lang + "/*/")
-    dirlist.sort()    
-
-    if lang == 'en':
-        chars = CHARS_EN
-    else:
-        chars = CHARS_CZ
-    
-    assert [d[-2] if d[-2] != '0' else '' for d in dirlist] == chars
-    
     images = np.zeros((1, 4096))
-    labels = []   
+    labels = []
 
-    # For every label load images and create corresponding labels
-    # cv2.imread(img, 0) - for loading images in grayscale
-    # Images are scaled to 64x64 = 4096 px
-    for i in range(len(chars)):
-        imglist = glob.glob(dirlist[i] + '*.jpg')
-        imgs = np.array([letterNorm(cv2.imread(img, 0)) for img in imglist])
-        images = np.concatenate([images, imgs.reshape(len(imgs), 4096)])
-        labels.extend([i] * len(imgs))
+    if charloc != '':
+        # Get subfolders with chars
+        dirlist = glob.glob(charloc + lang + "/*/")
+        dirlist.sort()    
+
+        if lang == 'en':
+            chars = CHARS_EN
+        else:
+            chars = CHARS_CZ
+
+        assert [d[-2] if d[-2] != '0' else '' for d in dirlist] == chars
+
+        # For every label load images and create corresponding labels
+        # cv2.imread(img, 0) - for loading images in grayscale
+        # Images are scaled to 64x64 = 4096 px
+        for i in range(len(chars)):
+            imglist = glob.glob(dirlist[i] + '*.jpg')
+            imgs = np.array([letterNorm(cv2.imread(img, 0)) for img in imglist])
+            images = np.concatenate([images, imgs.reshape(len(imgs), 4096)])
+            labels.extend([i] * len(imgs))
         
-    if useWords:    
+    if wordloc != '':    
         imgs, words, gaplines = loadWordsData(wordloc)
         imgs, chars = words2chars(imgs, words, gaplines, lang)
         
         labels.extend(chars)
         for i in range(len(imgs)):
+            printProgressBar(i, len(imgs))
             images = np.concatenate([images,
                                      letterNorm(imgs[i]).reshape(1, 4096)])            
 
