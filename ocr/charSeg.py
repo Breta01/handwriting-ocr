@@ -10,55 +10,37 @@ import math
 # Loading is slow -> prevent multiple loads
 print("Loading Segmantation model:")
 segCNNGraph = Graph('models/gap-clas/CNN-CG')
-segLargeCNNGraph = Graph('models/gap-clas/large/CNN-CG')
-segRNNGraph = Graph('models/gap-clas/RNN/Bi-RNN', 'prediction')
-segRNNDenseGraph = Graph('models/gap-clas/RNN/Bi-RNN-dense', 'prediction')
+segRNNGraph = Graph('models/gap-clas/RNN/Bi-RNN-new', 'prediction')
 
-def classify(img, step=2, RNN=False, large=False):
-    if large and RNN:
-        slider = (60, 60)
-    elif large:
-        slider = (60, 120)
-    else:
-        slider = (60, 30)
+def classify(img, step=2, RNN=False):
+    slider = (60, 60)
         
     length = (img.shape[1] - slider[1]) // 2 + 1
     if RNN:
         input_seq = np.zeros((1, length, slider[0]*slider[1]), dtype=np.float32)
         input_seq[0][:] = [img[:, loc * step: loc * step + slider[1]].flatten()
                            for loc in range(length)]
-        if large:
-            pred = segRNNDenseGraph.eval_feed({'inputs:0': input_seq,
-                                               'length:0': [length],
-                                               'keep_prob:0': 1})[0]
-        else:
-            pred = segRNNGraph.eval_feed({'inputs:0': input_seq,
-                                          'length:0': [length],
-                                          'keep_prob:0': 1})[0]
+        pred = segRNNGraph.eval_feed({'inputs:0': input_seq,
+                                      'length:0': [length],
+                                      'keep_prob:0': 1})[0]
     else:
         input_seq = np.zeros((length, slider[0]*slider[1]), dtype=np.float32)
         input_seq[:] = [img[:, loc * step: loc * step + slider[1]].flatten()
                         for loc in range(length)]
-        if large:
-            pred = segLargeCNNGraph.run(input_seq)
-        else:
-            pred = segCNNGraph.run(input_seq)
+        pred = segCNNGraph.run(input_seq)
         
     return pred
     
 
-def segmentation(img, step=2, RNN=False, large=False, debug=False):
+def segmentation(img, step=2, RNN=False, debug=False):
     """
     Take preprocessed image of word
     and return array of positions separating chars - gaps
     """        
-    if large:
-        slider = (60, 120)
-    else:
-        slider = (60, 30)
+    slider = (60, 60)
     length = (img.shape[1] - slider[1]) // 2 + 1
     
-    pred = classify(img, step, RNN, large)
+    pred = classify(img, step, RNN)
 
     gaps = []
 

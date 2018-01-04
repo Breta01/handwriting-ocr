@@ -16,6 +16,7 @@ def printProgressBar (iteration,
         length      - Optional  : character length of bar (Int)
         fill        - Optional  : bar fill character (Str)
     """
+    iteration += 1
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
