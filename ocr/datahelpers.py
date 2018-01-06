@@ -12,40 +12,29 @@ from .normalization import letterNorm
 from .viz import printProgressBar
 
 
-CHARS_CZ = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-            'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-            'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
-            'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-            'x', 'y', 'z', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ý', 'á',
-            'é', 'í', 'ó', 'ú', 'ý', 'Č', 'č', 'Ď', 'ď', 'Ě',
-            'ě', 'Ň', 'ň', 'Ř', 'ř', 'Š', 'š', 'Ť', 'ť', 'Ů',
-            'ů', 'Ž', 'ž']
+CHARS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
+         'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+         'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+         'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+         'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
+         'x', 'y', 'z', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ý', 'á',
+         'é', 'í', 'ó', 'ú', 'ý', 'Č', 'č', 'Ď', 'ď', 'Ě',
+         'ě', 'Ň', 'ň', 'Ř', 'ř', 'Š', 'š', 'Ť', 'ť', 'Ů',
+         'ů', 'Ž', 'ž']
 
-CHARS_EN = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-            'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-            'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
-            'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-            'x', 'y', 'z']
+idxs = [i for i in range(len(CHARS))]
+idx_to_chars = dict(zip(idxs, CHARS))
+chars_to_idx = dict(zip(CHARS, idxs))
 
-idxs = [i for i in range(len(CHARS_CZ))]
-idx_to_chars_cz = dict(zip(idxs, CHARS_CZ))
-chars_to_idx_cz = dict(zip(CHARS_CZ, idxs))
+def char2idx(c, sequence=False):
+    if sequence:
+        return chars_to_idx[c] + 1
+    return chars_to_idx[c]
 
-idxs = [i for i in range(len(CHARS_EN))]
-idx_to_chars_en = dict(zip(idxs, CHARS_EN))
-chars_to_idx_en = dict(zip(CHARS_EN, idxs))
-
-def char2idx(c, lang='cz'):
-    if lang == 'en':
-        return chars_to_idx_en[c]
-    return chars_to_idx_cz[c]
-
-def idx2char(idx, lang='cz'):
-    if lang == 'en':
-        return idx_to_chars_en[idx]
-    return idx_to_chars_cz[idx]
+def idx2char(idx, sequence=False):
+    if sequence:
+        return idx_to_chars[idx-1]
+    return idx_to_chars[idx]
     
 
 def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
@@ -122,7 +111,7 @@ def words2chars(images, labels, gaplines, lang='cz'):
             if lang == 'cz':
                 newLabels.append(char2idx(labels[i][pos]))
             else:
-                newLabels.append(char2idx(unidecode.unidecode(labels[i][pos]), lang))
+                newLabels.append(char2idx(unidecode.unidecode(labels[i][pos])))
             idx += 1
            
     print("Loaded chars from words:", length)            
