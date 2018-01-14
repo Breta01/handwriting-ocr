@@ -230,3 +230,25 @@ def correspondingShuffle(a):
     for i in range(len(a)):
         a[i] = a[i][p]
     return a
+
+
+def sequences_to_sparse(sequences):
+    """
+    Create a sparse representention of sequences.
+    Args:
+        sequences: a list of lists of type dtype where each element is a sequence
+    Returns:
+        A tuple with (indices, values, shape)
+    """
+    indices = []
+    values = []
+
+    for n, seq in enumerate(sequences):
+        indices.extend(zip([n]*len(seq), range(len(seq))))
+        values.extend(seq)
+        
+    indices = np.asarray(indices, dtype=np.int64)
+    values = np.asarray(values, dtype=np.int32)
+    shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1]+1], dtype=np.int64)
+
+    return indices, values, shape
