@@ -9,7 +9,7 @@ Proces of recognition is divided into 5 steps, starting with photo of page with 
 3. Normalization of words
 4. Separation and recegnition of characters (recognition of words)
 
-Main files combining all the steps are [OCR.ipynb](OCR.ipynb) and [OCR-Evaluator.ipynb](OCR-Evaluator.ipynb). Naming of files goes by step representing - name of machine learning model. Notebooks ending with `DM` stands for creation of dataset.
+Main files combining all the steps are [OCR.ipynb](OCR.ipynb) or [OCR-Evaluator.ipynb](OCR-Evaluator.ipynb). Naming of files goes by step representing - name of machine learning model. Notebooks ending with `DM` stands for creation of dataset.
 
 ## Getting Started
 ### Requirements
