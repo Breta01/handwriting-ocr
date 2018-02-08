@@ -1,6 +1,9 @@
 # Handwriting OCR
 The project tries to create software for recognition of a handwritten text from photos (also for Czech language). It uses computer vision and machine learning. And it experiments with different approaches to the problem.
 
+## CLONING!
+The repo uses [Git LFS](https://git-lfs.github.com/) for storing ML models. Make sure you have Git LFS set up before cloning. Without it, you will be missing some files after cloning.
+
 ## Program Structure
 Proces of recognition is divided into 5 steps, starting with photo of page with text.
 
