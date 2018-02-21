@@ -1,9 +1,6 @@
 # Handwriting OCR
 The project tries to create software for recognition of a handwritten text from photos (also for Czech language). It uses computer vision and machine learning. And it experiments with different approaches to the problem.
 
-## CLONING!
-The repo uses [Git LFS](https://git-lfs.github.com/) for storing ML models. Make sure you have Git LFS set up before cloning. Without it, you will be missing some files after cloning.
-
 ## Program Structure
 Proces of recognition is divided into 5 steps, starting with photo of page with text.
 
@@ -23,8 +20,11 @@ The project is created using Python 3.6 with Jupyter Notebook. Main libraries:
 * Pandas (0.21)
 * Matplotlib (2.1)
 
+### Cloning
+After running the `git clone https://github.com/Breta01/handwriting-ocr.git` or downloading the repo, you have to download the datasets and models (for more info look into data and models folders).
+
 ### Run
-With all required libraries installed clone the repo and run `jupyter notebook` in the directory of the project. Then you can work on the particular notebook.
+With all required libraries installed and cloned repo, run `jupyter notebook` in the directory of the project. Then you can work on the particular notebook.
 
 ## Contributing
 Best way how to get involved is through creating [GitHub issues](https://github.com/Breta01/handwriting-ocr/issues) or solving one! If there aren't any issues you can contact me directly on email.
