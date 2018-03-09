@@ -170,7 +170,17 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
 
 
 def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=True):
-    """ Load gap data from location with corresponding labels """
+    """ 
+    Load gap data from location with corresponding labels
+    Args:
+        loc: location of folder with words separated into gap data
+             images have to by named as label_timestamp.jpg, label is 0 or 1
+        slider: dimensions of of output images
+        seq: Store images from one word as a sequence
+        flatten: Flatten the output images
+    Returns:
+        (images, labels)
+    """
     print('Loading gap data...')
     loc += '/' if loc[-1] != '/' else ''
     dirlist = glob.glob(loc + "*/")
@@ -180,7 +190,8 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
         # TODO Implement for higher dimmensions
         slider[1] = 120
         
-    cut = None if (120 - slider[1]) // 2 <= 0 else (120 - slider[1]) // 2
+    cut_s = None if (120 - slider[1]) // 2 <= 0 else  (120 - slider[1]) // 2
+    cut_e = None if (120 - slider[1]) // 2 <= 0 else -(120 - slider[1]) // 2
     
     if seq:
         images = np.empty(len(dirlist), dtype=object)
@@ -188,12 +199,13 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
         
         for i, loc in enumerate(dirlist):
             # TODO Check for empty directories
-            imgList = glob.glob(loc + '*.jpg')
-            imgList = sorted(imgList, key=lambda x: int(x[len(loc):].split("_")[1][:-4]))
-            images[i] = np.array([(cv2.imread(img, 0)[:, cut:-cut].flatten() if flatten else
-                                   cv2.imread(img, 0)[:, cut:-cut])
-                                  for img in imgList])
-            labels[i] = np.array([int(name[len(loc):].split("_")[0]) for name in imgList])
+            imglist = glob.glob(loc + '*.jpg')
+            if (len(imglist) != 0):
+                imgList = sorted(imglist, key=lambda x: int(x[len(loc):].split("_")[1][:-4]))
+                images[i] = np.array([(cv2.imread(img, 0)[:, cut_s:cut_e].flatten() if flatten else
+                                       cv2.imread(img, 0)[:, cut_s:cut_e])
+                                      for img in imglist])
+                labels[i] = np.array([int(name[len(loc):].split("_")[0]) for name in imglist])
         
     else:
         images = np.zeros((1, slider[0]*slider[1]))
@@ -201,9 +213,10 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
 
         for i in range(len(dirlist)):
             imglist = glob.glob(dirlist[i] + '*.jpg')
-            imgs = np.array([cv2.imread(img, 0)[:, cut:-cut] for img in imglist])
-            images = np.concatenate([images, imgs.reshape(len(imgs), slider[0]*slider[1])])
-            labels.extend([int(img[len(dirlist[i])]) for img in imglist])
+            if (len(imglist) != 0):
+                imgs = np.array([cv2.imread(img, 0)[:, cut_s:cut_e] for img in imglist])
+                images = np.concatenate([images, imgs.reshape(len(imgs), slider[0]*slider[1])])
+                labels.extend([int(img[len(dirlist[i])]) for img in imglist])
 
         images = images[1:]
         labels = np.array(labels)
