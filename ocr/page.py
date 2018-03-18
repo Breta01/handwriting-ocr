@@ -14,7 +14,7 @@ def detection(image):
     # Close gaps between edges (double page clouse => rectangle kernel)
     closedEdges = cv2.morphologyEx(imageEdges, 
                                    cv2.MORPH_CLOSE, 
-                                   np.ones((5, 11)))    
+                                   np.ones((5, 11)))
     # Countours
     pageContour = findPageContours(closedEdges, resize(image))
     # Recalculate to original scale
@@ -76,9 +76,9 @@ def findPageContours(edges, img):
 
     maxArea = MIN_COUNTOUR_AREA
     pageContour = np.array([[0, 0],
-                            [0, height],
-                            [width, height],
-                            [width, 0]])
+                            [0, height-5],
+                            [width-5, height-5],
+                            [width-5, 0]])
 
     for cnt in contours:
         perimeter = cv2.arcLength(cnt, True)
@@ -90,10 +90,10 @@ def findPageContours(edges, img):
                 maxArea < cv2.contourArea(approx) < MAX_COUNTOUR_AREA):
             
             maxArea = cv2.contourArea(approx)
-            pageContour = approx
+            pageContour = approx[:, 0]
 
     # Sort corners and offset them
-    pageContour = fourCornersSort(pageContour[:, 0])
+    pageContour = fourCornersSort(pageContour)
     return contourOffset(pageContour, (-5, -5))
 
 
