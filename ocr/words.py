@@ -39,6 +39,48 @@ def sobelDetect(channel):
     return np.uint8(sobel)
 
 
+def union(a,b):
+    x = min(a[0], b[0])
+    y = min(a[1], b[1])
+    w = max(a[0]+a[2], b[0]+b[2]) - x
+    h = max(a[1]+a[3], b[1]+b[3]) - y
+    return [x, y, w, h]
+
+def isIntersect(a,b):
+    x = max(a[0], b[0])
+    y = max(a[1], b[1])
+    w = min(a[0]+a[2], b[0]+b[2]) - x
+    h = min(a[1]+a[3], b[1]+b[3]) - y
+    if w<0 or h<0:
+        return False
+    return True
+
+def groupRectangles(rec):
+    """
+    Uion intersecting rectangles
+    Args:
+        rec - list of rectangles in form [x, y, w, h]
+    Return:
+        list of grouped ractangles 
+    """
+    tested = [False for i in range(len(rec))]
+    final = []
+    i = 0
+    while i < len(rec):
+        if not tested[i]:
+            j = i+1
+            while j < len(rec):
+                if not tested[j] and isIntersect(rec[i], rec[j]):
+                    rec[i] = union(rec[i], rec[j])
+                    tested[j] = True
+                    j = i
+                j += 1
+            final += [rec[i]]
+        i += 1
+            
+    return final
+
+
 def textDetect(img, image):
     """ Text detection using contours """
     small = resize(img, 2000)
@@ -50,6 +92,7 @@ def textDetect(img, image):
                                            cv2.CHAIN_APPROX_SIMPLE)
     index = 0    
     boundingBoxes = np.array([0,0,0,0])
+    bBoxes = []
     
     # image for drawing bounding boxes
     small = cv2.cvtColor(small, cv2.COLOR_GRAY2RGB)
@@ -64,11 +107,16 @@ def textDetect(img, image):
         
         # Limits for text
         if r > 0.1 and 1600 > w > 10 and 1600 > h > 10 and  (60 // h) * w < 1000:
-            cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
-            boundingBoxes = np.vstack((boundingBoxes,
-                                       np.array([x, y, x+w, y+h])))
+            bBoxes += [[x, y, w, h]]
             
         index = hierarchy[0][index][0]
+        
+    # Need more work
+    # bBoxes = groupRectangles(bBoxes)
+    for (x, y, w, h) in bBoxes:
+        cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
+        boundingBoxes = np.vstack((boundingBoxes,
+                                   np.array([x, y, x+w, y+h])))
         
     implt(small, t='Bounding rectangles')
     
