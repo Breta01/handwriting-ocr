@@ -8,16 +8,16 @@ import matplotlib.pyplot as plt
 import cv2
 from .helpers import *
 
-def detection(image):
+def detection(image, join=False):
     """ Detecting the words bounding boxes """
     # Preprocess image for word detection
-    blurred = cv2.GaussianBlur(image, (5, 5), 10)
+    blurred = cv2.GaussianBlur(image, (5, 5), 18)
     edgeImg = edgeDetect(blurred)
     ret, edgeImg = cv2.threshold(edgeImg, 50, 255, cv2.THRESH_BINARY)
     bwImage = cv2.morphologyEx(edgeImg, cv2.MORPH_CLOSE,
                                np.ones((15,15), np.uint8))
     # Return detected bounding boxes
-    return textDetect(bwImage, image)
+    return textDetect(bwImage, image, join)
 
 
 def edgeDetect(im):
@@ -81,7 +81,7 @@ def groupRectangles(rec):
     return final
 
 
-def textDetect(img, image):
+def textDetect(img, image, join=False):
     """ Text detection using contours """
     small = resize(img, 2000)
     
@@ -106,13 +106,14 @@ def textDetect(img, image):
         r = cv2.countNonZero(maskROI) / (w * h)
         
         # Limits for text
-        if r > 0.1 and 1600 > w > 10 and 1600 > h > 10 and  (60 // h) * w < 1000:
+        if r > 0.1 and 1600 > w > 10 and 1600 > h > 10 and h/w < 3 and w/h < 10 and (60 // h) * w < 1000:
             bBoxes += [[x, y, w, h]]
             
         index = hierarchy[0][index][0]
         
     # Need more work
-    # bBoxes = groupRectangles(bBoxes)
+    if join:
+        bBoxes = groupRectangles(bBoxes)
     for (x, y, w, h) in bBoxes:
         cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
         boundingBoxes = np.vstack((boundingBoxes,
@@ -120,7 +121,7 @@ def textDetect(img, image):
         
     implt(small, t='Bounding rectangles')
     
-    bBoxes = boundingBoxes.dot(ratio(image, 2000)).astype(np.int64)
+    bBoxes = boundingBoxes.dot(ratio(image, small.shape[0])).astype(np.int64)
     return bBoxes[1:]  
     
 
