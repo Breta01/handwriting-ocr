@@ -30,6 +30,17 @@ class Graph():
     def eval_feed(self, feed):
         """ Run the specified operation with given feed """
         return self.sess.run(self.op, feed_dict=feed)
+    
+    def run_op(self, op, feed, output=True):
+        """ Run given operation with the feed """
+        if output:
+            return self.sess.run(
+                self.graph.get_operation_by_name(op).outputs[0],
+                feed_dict=feed)
+        else:
+            self.sess.run(
+                self.graph.get_operation_by_name(op),
+                feed_dict=feed)
         
     
     
