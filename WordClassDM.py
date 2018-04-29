@@ -25,7 +25,6 @@ def loadImages(dataloc, idx=0, num=None):
     """ Load images and labels """
     print("Loading words...")
 
-    dataloc += '/' if dataloc[-1] != '/' else ''
     # Load images and short them from the oldest to the newest
     imglist = glob.glob(os.path.join(dataloc, u'*.jpg'))
     imglist.sort(key=lambda x: float(x.split("_")[-1][:-4]))
@@ -54,14 +53,24 @@ def loadImages(dataloc, idx=0, num=None):
     return (images[idx:num], labels[idx:num])
 
 
+def locCheck(loc):
+    return loc + '/' if loc[-1] != '/' else loc
+
+
 class Cycler:
     drawing = False
     scaleF = 4
 
-    def __init__(self, idx, loc='data/words_raw'):
+    def __init__(self, idx, data_loc, save_loc):
         """ Load images and starts from given index """
         # self.images, self.labels = loadImages(loc, idx)
-        self.loc = loc
+        # Create save_loc directory if not exists
+        if not os.path.exists(save_loc):
+            os.makedirs(save_loc)
+            
+        self.data_loc = locCheck(data_loc)
+        self.save_loc = locCheck(save_loc)
+        
         self.idx = 0
         self.org_idx = idx
 
@@ -107,7 +116,7 @@ class Cycler:
 
     def blockLoad(self):
         self.images, self.labels = loadImages(
-            self.loc, self.org_idx + self.idx, 100)
+            self.data_loc, self.org_idx + self.idx, 100)
         self.org_idx += self.idx
         self.idx = 0
         return len(self.images) is not 0
@@ -139,9 +148,9 @@ class Cycler:
             assert len(self.gaplines) - 1 == len(self.label_act.split("_")[0])
 
             cv2.imwrite(
-                    "data/words2/%s.jpg" % (self.label_act),
+                    self.save_loc + '%s.jpg' % (self.label_act),
                     self.images[self.idx])
-            with open('data/words2/%s.txt' % (self.label_act), 'w') as fp:
+            with open(self.save_loc + '%s.txt' % (self.label_act), 'w') as fp:
                 simplejson.dump(self.gaplines, fp)
             return True
         except:
@@ -193,6 +202,18 @@ if __name__ == '__main__':
         type=int,
         default=0,
         help="Index of starting image")
+    
+    parser.add_argument(
+        "--data",
+        type=str,
+        default='data/words_raw',
+        help="Path to folder with images")
+    
+    parser.add_argument(
+        "--save",
+        type=str,
+        default='data/words2',
+        help="Path to folder for saving images with gaplines")
 
     args = parser.parse_args()
-    Cycler(args.index)
+    Cycler(args.index, args.data, args.save)
