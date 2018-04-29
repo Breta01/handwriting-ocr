@@ -137,10 +137,9 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
         dirlist.sort()    
 
         if lang == 'en':
-            chars = CHARS_EN
+            chars = CHARS[:53]
         else:
-            chars = CHARS_CZ
-
+            chars = CHARS
         assert [d[-2] if d[-2] != '0' else '' for d in dirlist] == chars
 
         # For every label load images and create corresponding labels
