@@ -156,10 +156,12 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
         imgs, chars = words2chars(imgs, words, gaplines, lang)
         
         labels.extend(chars)
+        images2 = np.zeros((len(imgs), 4096)) 
         for i in range(len(imgs)):
             printProgressBar(i, len(imgs))
-            images = np.concatenate([images,
-                                     letterNorm(imgs[i]).reshape(1, 4096)])            
+            images2[i] = letterNorm(imgs[i]).reshape(1, 4096)
+
+        images = np.concatenate([images, images2])          
 
     images = images[1:]
     labels = np.array(labels)
