@@ -94,7 +94,7 @@ def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     return (images, labels)
 
 
-def words2chars(images, labels, gaplines, lang='cz'):
+def words2chars(images, labels, gaplines):
     """ Transform word images with gaplines into individual chars """
     # Total number of chars
     length = sum([len(l) for l in labels])
@@ -108,10 +108,7 @@ def words2chars(images, labels, gaplines, lang='cz'):
     for i, gaps in enumerate(gaplines):
         for pos in range(len(gaps) - 1):
             imgs[idx] = images[i][0:height, gaps[pos]:gaps[pos+1]]
-            if lang == 'cz':
-                newLabels.append(char2idx(labels[i][pos]))
-            else:
-                newLabels.append(char2idx(unidecode.unidecode(labels[i][pos])))
+            newLabels.append(char2idx(labels[i][pos]))
             idx += 1
            
     print("Loaded chars from words:", length)            
@@ -153,7 +150,9 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
         
     if wordloc != '':    
         imgs, words, gaplines = loadWordsData(wordloc)
-        imgs, chars = words2chars(imgs, words, gaplines, lang)
+        if lang != 'cz':
+             words = np.array([unidecode.unidecode(w) for w in words])
+        imgs, chars = words2chars(imgs, words, gaplines)
         
         labels.extend(chars)
         images2 = np.zeros((len(imgs), 4096)) 
