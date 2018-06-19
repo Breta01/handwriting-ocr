@@ -147,7 +147,7 @@ def hystImageNorm(image):
     """ Word normalization using hystheresis thresholding """
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 #     img = cv2.bilateralFilter(gray, 0, 10, 30)
-    img = cv2.bilateralFilter(gray, 0, 15, 30)
+    img = cv2.bilateralFilter(gray, 10, 10, 30)
     return HysterThresh(img).getImage()
 
 
