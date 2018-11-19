@@ -72,14 +72,13 @@ class TrainingPlot:
 
 
 class DataSet:
-    """ Class for training data and feeding train function """
+    """Class for training data and feeding train function."""
     images = None
     labels = None
     length = 0
     index = 0
 
     def __init__(self, img, lbl):
-        """ Crate the dataset """
         self.images = img
         self.labels = lbl
         self.length = len(img)

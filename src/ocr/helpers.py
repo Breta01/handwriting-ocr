@@ -6,17 +6,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
+# Set size of printed images
+plt.rcParams['figure.figsize'] = (9.0, 7.0)
+
 SMALL_HEIGHT = 800
 
 def implt(img, cmp=None, t=''):
-    """ Show image using plt """
+    """Show image using plt."""
     plt.imshow(img, cmap=cmp)
     plt.title(t)
     plt.show()
 
 
 def resize(img, height=SMALL_HEIGHT, allways=False):
-    """ Resize image to given height """
+    """Resize image to given height."""
     if (img.shape[0] > height or allways):
         rat = height / img.shape[0]
         return cv2.resize(img, (int(rat * img.shape[1]), height))
@@ -25,12 +28,12 @@ def resize(img, height=SMALL_HEIGHT, allways=False):
 
 
 def ratio(img, height=SMALL_HEIGHT):
-    """ Getting scale ratio """
+    """Getting scale ratio."""
     return img.shape[0] / height
 
 
 def extendImg(img, shape):
-    """ Extend 2D image (numpy array) in vertical and horizontal direction
+    """Extend 2D image (numpy array) in vertical and horizontal direction.
     Shape of result image will match 'shape'
     Args:
         img: image to be extended

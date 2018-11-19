@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 Provide functions and classes:
-Graph       = Class for loading and using trained models from tensorflow
+Model       = Class for loading and using trained models from tensorflow
 create_cell = function for creatting RNN cells with wrappers
 """
 import tensorflow as tf
 from tensorflow.python.ops.rnn_cell_impl import LSTMCell, ResidualWrapper, DropoutWrapper, MultiRNNCell
 
-class Graph():
-    """ Loading and running isolated tf graph """
+class Model():
+    """Loading and running isolated tf graph."""
     def __init__(self, loc, operation='activation', input_name='x'):
         """
         loc: location of file containing saved model
@@ -24,15 +24,15 @@ class Graph():
             self.op = self.graph.get_operation_by_name(operation).outputs[0]
 
     def run(self, data):
-        """ Run the specified operation on given data """
+        """Run the specified operation on given data."""
         return self.sess.run(self.op, feed_dict={self.input: data})
     
     def eval_feed(self, feed):
-        """ Run the specified operation with given feed """
+        """Run the specified operation with given feed."""
         return self.sess.run(self.op, feed_dict=feed)
     
     def run_op(self, op, feed, output=True):
-        """ Run given operation with the feed """
+        """Run given operation with the feed."""
         if output:
             return self.sess.run(
                 self.graph.get_operation_by_name(op).outputs[0],
@@ -45,7 +45,7 @@ class Graph():
     
     
 def create_single_cell(cell_fn, num_units, is_residual=False, is_dropout=False, keep_prob=None):
-    """ Create single RNN cell based on cell_fn"""
+    """Create single RNN cell based on cell_fn."""
     cell = cell_fn(num_units)
     if is_dropout:
         cell = DropoutWrapper(cell, input_keep_prob=keep_prob)
@@ -55,7 +55,7 @@ def create_single_cell(cell_fn, num_units, is_residual=False, is_dropout=False, 
 
 
 def create_cell(num_units, num_layers, num_residual_layers, is_dropout=False, keep_prob=None, cell_fn=LSTMCell):
-    """ Create corresponding number of RNN cells with given wrappers"""
+    """Create corresponding number of RNN cells with given wrappers."""
     cell_list = []
     
     for i in range(num_layers):

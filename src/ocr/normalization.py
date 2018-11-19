@@ -11,12 +11,12 @@ from .helpers import *
 
 
 def imageStandardization(image):
-    """ Image standardization same as tf.image.per_image_standardization """
+    """Image standardization same as tf.image.per_image_standardization."""
     return (image - np.mean(image)) / max(np.std(image), 1.0/math.sqrt(image.size))
 
 
 def cropAddBorder(img, height, threshold=50, border=True, borderSize=15):
-    """ Crop and add border to word image of letter segmentation """
+    """Crop and add border to word image of letter segmentation."""
     # Clear small values
     ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
 
@@ -55,7 +55,7 @@ def cropAddBorder(img, height, threshold=50, border=True, borderSize=15):
 
 
 def wordTilt(img, height, border=True, borderSize=15):
-    """ Detect the angle for tiltByAngle function """
+    """Detect the angle for tiltByAngle function."""
     edges = cv2.Canny(img, 50, 150, apertureSize = 3)
     lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
 
@@ -73,7 +73,7 @@ def wordTilt(img, height, border=True, borderSize=15):
 
 
 def tiltByAngle(img, angle, height):
-    """ Tilt the image by given angle """
+    """Tilt the image by given angle."""
     dist = np.tan(angle) * height
     width = len(img[0])
     sPoints = np.float32([[0,0], [0,height], [width,height], [width,0]])
@@ -96,7 +96,7 @@ def tiltByAngle(img, angle, height):
 
 
 def sobelDetect(channel):
-    """ The Sobel Operator"""
+    """The Sobel Operator."""
     sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)
     sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1)
     # Combine x, y gradient magnitudes sqrt(x^2 + y^2)
@@ -144,7 +144,7 @@ class HysterThresh:
 
 
 def hystImageNorm(image):
-    """ Word normalization using hystheresis thresholding """
+    """Word normalization using hystheresis thresholding."""
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 #     img = cv2.bilateralFilter(gray, 0, 10, 30)
     img = cv2.bilateralFilter(gray, 10, 10, 30)
@@ -173,7 +173,7 @@ def imageNorm(image, height, border=True, tilt=True, borderSize=15, hystNorm=Fal
 
 
 def resizeLetter(img, size = 56):
-    """ Resize bigger side of the image to given size """
+    """Resize bigger side of the image to given size."""
     if (img.shape[0] > img.shape[1]):
         rat = size / img.shape[0]
         return cv2.resize(img, (int(rat * img.shape[1]), size))
@@ -184,7 +184,7 @@ def resizeLetter(img, size = 56):
 
 
 def letterNorm(image, is_thresh=True, dim=False):
-    """ Preprocess an image - crop """
+    """Preprocess an image - crop."""
     if is_thresh and image.shape[0] > 0 and image.shape[1] > 0:
         image = cropAddBorder(image, height=0, threshold=80, border=False) # threshold=80
 

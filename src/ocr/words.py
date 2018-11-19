@@ -9,29 +9,31 @@ import cv2
 from .helpers import *
 
 def detection(image, join=False):
-    """ Detecting the words bounding boxes """
+    """Detecting the words bounding boxes.
+    Return: numpy array of bounding boxes [x, y, x+w, y+h]
+    """
     # Preprocess image for word detection
     blurred = cv2.GaussianBlur(image, (5, 5), 18)
-    edgeImg = edgeDetect(blurred)
-    ret, edgeImg = cv2.threshold(edgeImg, 50, 255, cv2.THRESH_BINARY)
-    bwImage = cv2.morphologyEx(edgeImg, cv2.MORPH_CLOSE,
-                               np.ones((15,15), np.uint8))
-    # Return detected bounding boxes
-    return textDetect(bwImage, image, join)
+    edge_img = _edge_detect(blurred)
+    ret, edge_img = cv2.threshold(edge_img, 50, 255, cv2.THRESH_BINARY)
+    bw_img = cv2.morphologyEx(edge_img, cv2.MORPH_CLOSE,
+                              np.ones((15,15), np.uint8))
+
+    return _text_detect(bw_img, image, join)
 
 
-def edgeDetect(im):
+def _edge_detect(im):
     """ 
-    Edge detection 
+    Edge detection using sobel operator on each layer individually.
     Sobel operator is applied for each image layer (RGB)
     """
-    return np.max(np.array([sobelDetect(im[:,:, 0]),
-                            sobelDetect(im[:,:, 1]),
-                            sobelDetect(im[:,:, 2])]), axis=0)
+    return np.max(np.array([_sobel_detect(im[:,:, 0]),
+                            _sobel_detect(im[:,:, 1]),
+                            _sobel_detect(im[:,:, 2])]), axis=0)
 
 
-def sobelDetect(channel):
-    """ Sobel operator """
+def _sobel_detect(channel):
+    """Sobel operator."""
     sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)
     sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1)
     sobel = np.hypot(sobelX, sobelY)
@@ -46,7 +48,7 @@ def union(a,b):
     h = max(a[1]+a[3], b[1]+b[3]) - y
     return [x, y, w, h]
 
-def isIntersect(a,b):
+def _intersect(a,b):
     x = max(a[0], b[0])
     y = max(a[1], b[1])
     w = min(a[0]+a[2], b[0]+b[2]) - x
@@ -55,9 +57,9 @@ def isIntersect(a,b):
         return False
     return True
 
-def groupRectangles(rec):
+def _group_rectangles(rec):
     """
-    Uion intersecting rectangles
+    Uion intersecting rectangles.
     Args:
         rec - list of rectangles in form [x, y, w, h]
     Return:
@@ -70,7 +72,7 @@ def groupRectangles(rec):
         if not tested[i]:
             j = i+1
             while j < len(rec):
-                if not tested[j] and isIntersect(rec[i], rec[j]):
+                if not tested[j] and _intersect(rec[i], rec[j]):
                     rec[i] = union(rec[i], rec[j])
                     tested[j] = True
                     j = i
@@ -81,8 +83,8 @@ def groupRectangles(rec):
     return final
 
 
-def textDetect(img, image, join=False):
-    """ Text detection using contours """
+def _text_detect(img, image, join=False):
+    """Text detection using contours."""
     small = resize(img, 2000)
     
     # Finding contours
@@ -90,13 +92,9 @@ def textDetect(img, image, join=False):
     im2, cnt, hierarchy = cv2.findContours(np.copy(small),
                                            cv2.RETR_CCOMP,
                                            cv2.CHAIN_APPROX_SIMPLE)
+    
     index = 0    
-    boundingBoxes = np.array([0,0,0,0])
-    bBoxes = []
-    
-    # image for drawing bounding boxes
-    small = cv2.cvtColor(small, cv2.COLOR_GRAY2RGB)
-    
+    boxes = []
     # Go through all contours in top level
     while (index >= 0):
         x,y,w,h = cv2.boundingRect(cnt[index])
@@ -106,28 +104,38 @@ def textDetect(img, image, join=False):
         r = cv2.countNonZero(maskROI) / (w * h)
         
         # Limits for text
-        if r > 0.1 and 1600 > w > 10 and 1600 > h > 10 and h/w < 3 and w/h < 10 and (60 // h) * w < 1000:
-            bBoxes += [[x, y, w, h]]
+        if (r > 0.1
+            and 1600 > w > 10
+            and 1600 > h > 10
+            and h/w < 3
+            and w/h < 10
+            and (60 // h) * w < 1000):
+            boxes += [[x, y, w, h]]
             
         index = hierarchy[0][index][0]
-        
-    # Need more work
+
     if join:
-        bBoxes = groupRectangles(bBoxes)
-    for (x, y, w, h) in bBoxes:
+        # Need more work
+        boxes = _group_rectangles(boxes)
+
+    # image for drawing bounding boxes
+    small = cv2.cvtColor(small, cv2.COLOR_GRAY2RGB)
+    bounding_boxes = np.array([0,0,0,0])
+    for (x, y, w, h) in boxes:
         cv2.rectangle(small, (x, y),(x+w,y+h), (0, 255, 0), 2)
-        boundingBoxes = np.vstack((boundingBoxes,
-                                   np.array([x, y, x+w, y+h])))
+        bounding_boxes = np.vstack((bounding_boxes,
+                                    np.array([x, y, x+w, y+h])))
         
     implt(small, t='Bounding rectangles')
     
-    bBoxes = boundingBoxes.dot(ratio(image, small.shape[0])).astype(np.int64)
+    boxes = bounding_boxes.dot(ratio(image, small.shape[0])).astype(np.int64)
     return bBoxes[1:]  
     
 
 def textDetectWatershed(thresh):
-    """ Text detection using watershed algorithm - NOT IN USE """
-    # According to: http://docs.opencv.org/trunk/d3/db4/tutorial_py_watershed.html
+    """NOT IN USE - Text detection using watershed algorithm.
+    Based on: http://docs.opencv.org/trunk/d3/db4/tutorial_py_watershed.html
+    """
     img = cv2.cvtColor(cv2.imread("data/textdet/%s.jpg" % IMG),
                        cv2.COLOR_BGR2RGB)
     img = resize(img, 3000)

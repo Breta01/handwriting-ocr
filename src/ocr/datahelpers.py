@@ -9,7 +9,7 @@ import cv2
 import unidecode
 from .helpers import implt
 from .normalization import letterNorm
-from .viz import printProgressBar
+from .viz import print_progress_bar
 
 
 CHARS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
@@ -17,10 +17,8 @@ CHARS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
          'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
          'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
          'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-         'x', 'y', 'z', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ý', 'á',
-         'é', 'í', 'ó', 'ú', 'ý', 'Č', 'č', 'Ď', 'ď', 'Ě',
-         'ě', 'Ň', 'ň', 'Ř', 'ř', 'Š', 'š', 'Ť', 'ť', 'Ů',
-         'ů', 'Ž', 'ž']
+         'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6',
+         '7', '8', '9']
 
 idxs = [i for i in range(len(CHARS))]
 idx_to_chars = dict(zip(idxs, CHARS))
@@ -39,7 +37,7 @@ def idx2char(idx, sequence=False):
 
 def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     """
-    Load word images with corresponding labels and gaplines (if loadGaplines == True)
+    Load word images with corresponding labels and gaplines (if loadGaplines == True).
     Args:
         dataloc: image folder location - can be list of multiple locations,
         loadGaplines: wheter or not load gaplines positions files
@@ -94,8 +92,8 @@ def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     return (images, labels)
 
 
-def words2chars(images, labels, gaplines):
-    """ Transform word images with gaplines into individual chars """
+def _words2chars(images, labels, gaplines):
+    """Transform word images with gaplines into individual chars."""
     # Total number of chars
     length = sum([len(l) for l in labels])
     
@@ -117,7 +115,7 @@ def words2chars(images, labels, gaplines):
 
 def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
     """
-    Load chars images with corresponding labels
+    Load chars images with corresponding labels.
     Args:
         charloc: char images FOLDER LOCATION
         wordloc: word images with gaplines FOLDER LOCATION
@@ -152,12 +150,12 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
         imgs, words, gaplines = loadWordsData(wordloc)
         if lang != 'cz':
              words = np.array([unidecode.unidecode(w) for w in words])
-        imgs, chars = words2chars(imgs, words, gaplines)
+        imgs, chars = _words2chars(imgs, words, gaplines)
         
         labels.extend(chars)
         images2 = np.zeros((len(imgs), 4096)) 
         for i in range(len(imgs)):
-            printProgressBar(i, len(imgs))
+            print_progress_bar(i, len(imgs))
             images2[i] = letterNorm(imgs[i]).reshape(1, 4096)
 
         images = np.concatenate([images, images2])          
@@ -171,7 +169,7 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
 
 def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=True):
     """ 
-    Load gap data from location with corresponding labels
+    Load gap data from location with corresponding labels.
     Args:
         loc: location of folder with words separated into gap data
              images have to by named as label_timestamp.jpg, label is 0 or 1
@@ -232,7 +230,7 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
 def correspondingShuffle(a):
     """ 
     Shuffle array of numpy arrays such that
-    each pair a[x][i] and a[y][i] remains the same
+    each pair a[x][i] and a[y][i] remains the same.
     Args:
         a: array of same length numpy arrays
     Returns:
