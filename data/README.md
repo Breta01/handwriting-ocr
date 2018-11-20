@@ -9,7 +9,7 @@ After downloading these datasets, there are scripts in `src/data/` folder which 
 
 ### Breta’s data (1)
 *5000 images*  
-All data owned by [@Breta01](https://github.com/Breta01) are available on this link (distributed under the same license as this repository). The data should be placed either in `raw/` or `processed/` folder according to their location in archive:
+All data owned by [@Breta01](https://github.com/Breta01) are available on this link (distributed under the same license as this repository). The data should be placed either in `raw/breta/` or `processed/breta/` folder according to their location in archive:
 
 <https://drive.google.com/file/d/0Bw95a8U_pp2aakE0emZraHpHczA/view?usp=sharing>
 
@@ -42,6 +42,9 @@ First, read the README file (the first link). After that, you can download `lob.
 
 ## Dictionaries
 `dictionaries/` folder contains a list of most common words for simple autocorrection.
+
+## Pages
+It contains photos of pages which are used for testing of page detection, words detection and testing in general.
 
 ## Characters Dataset
 `characters/` folder contains single character images. There is only a few of them and they are already pre-processed. I advise using different dataset (for example NIST Special Database 19). Currently, there is no pre-processing script for it.
