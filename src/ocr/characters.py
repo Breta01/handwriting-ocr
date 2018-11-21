@@ -14,6 +14,7 @@ CNN_slider = (60, 30)
 RNN_model = Model('models/gap-clas/RNN/Bi-RNN-new', 'prediction')
 RNN_slider = (60, 60)
 
+
 def _classify(img, step=2, RNN=False, slider=(60, 60)):
     """Slice the image and return raw output of classifier."""
     length = (img.shape[1] - slider[1]) // 2 + 1

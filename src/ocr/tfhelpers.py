@@ -44,7 +44,7 @@ class Model():
         
     
     
-def create_single_cell(cell_fn, num_units, is_residual=False, is_dropout=False, keep_prob=None):
+def _create_single_cell(cell_fn, num_units, is_residual=False, is_dropout=False, keep_prob=None):
     """Create single RNN cell based on cell_fn."""
     cell = cell_fn(num_units)
     if is_dropout:
@@ -59,7 +59,7 @@ def create_cell(num_units, num_layers, num_residual_layers, is_dropout=False, ke
     cell_list = []
     
     for i in range(num_layers):
-        cell_list.append(create_single_cell(
+        cell_list.append(_create_single_cell(
             cell_fn=cell_fn,
             num_units=num_units,
             is_residual=(i >= num_layers - num_residual_layers),

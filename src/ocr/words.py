@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import cv2
 from .helpers import *
 
+
 def detection(image, join=False):
     """Detecting the words bounding boxes.
     Return: numpy array of bounding boxes [x, y, x+w, y+h]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Include functions for normalizing images of words and letters
-Main functions: imageNorm, letterNorm, imageStandardization
+Main functions: word_normalization, letter_normalization, image_standardization
 """
 import numpy as np
 import cv2
@@ -9,13 +9,14 @@ import math
 from .helpers import *
 
 
-
-def imageStandardization(image):
-    """Image standardization same as tf.image.per_image_standardization."""
+def image_standardization(image):
+    """Image standardization should result in same output 
+    as tf.image.per_image_standardization.
+    """
     return (image - np.mean(image)) / max(np.std(image), 1.0/math.sqrt(image.size))
 
 
-def cropAddBorder(img, height, threshold=50, border=True, borderSize=15):
+def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
     """Crop and add border to word image of letter segmentation."""
     # Clear small values
     ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
@@ -48,14 +49,14 @@ def cropAddBorder(img, height, threshold=50, border=True, borderSize=15):
         img = img[y0:y1, x0:x1]
 
     if border:
-        return cv2.copyMakeBorder(img, 0, 0, borderSize, borderSize,
+        return cv2.copyMakeBorder(img, 0, 0, border_size, border_size,
                                   cv2.BORDER_CONSTANT,
                                   value=[0, 0, 0])
     return img
 
 
-def wordTilt(img, height, border=True, borderSize=15):
-    """Detect the angle for tiltByAngle function."""
+def _word_tilt(img, height, border=True, border_size=15):
+    """Detect the angle and tilt the image."""
     edges = cv2.Canny(img, 50, 150, apertureSize = 3)
     lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
 
@@ -68,11 +69,11 @@ def wordTilt(img, height, border=True, borderSize=15):
 
         # Look for angle with correct value
         if meanAngle != 0 and (meanAngle < 0.7 or meanAngle > 2.6):
-            img = tiltByAngle(img, meanAngle, height)
-    return cropAddBorder(img, height, 50, border, borderSize)
+            img = _tilt_by_angle(img, meanAngle, height)
+    return _crop_add_border(img, height, 50, border, border_size)
 
 
-def tiltByAngle(img, angle, height):
+def _tilt_by_angle(img, angle, height):
     """Tilt the image by given angle."""
     dist = np.tan(angle) * height
     width = len(img[0])
@@ -95,7 +96,7 @@ def tiltByAngle(img, angle, height):
     return cv2.warpPerspective(img, M, (int(width+abs(dist)), height))
 
 
-def sobelDetect(channel):
+def _sobel_detect(channel):
     """The Sobel Operator."""
     sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)
     sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1)
@@ -118,11 +119,11 @@ class HysterThresh:
         self.img = img
         self.im = np.zeros(img.shape, dtype=img.dtype)
 
-    def getImage(self):
-        self.hyster()
+    def get_image(self):
+        self._hyster()
         return np.uint8(self.im)
 
-    def hyster_rec(self, r, c):
+    def _hyster_rec(self, r, c):
         h, w = self.img.shape
         for ri in range(r-1, r+2):
             for ci in range(c-1, c+2):
@@ -131,48 +132,44 @@ class HysterThresh:
                     and self.im[ri, ci] == 0
                     and self.high > self.img[ri, ci] >= self.low):
                     self.im[ri, ci] = self.img[ri, ci] + self.diff
-                    self.hyster_rec(ri, ci)
+                    self._hyster_rec(ri, ci)
 
-    def hyster(self):
+    def _hyster(self):
         r, c = self.img.shape
         for ri in range(r):
             for ci in range(c):
                 if (self.img[ri, ci] >= self.high):
                     self.im[ri, ci] = 255
                     self.img[ri, ci] = 255
-                    self.hyster_rec(ri, ci)
+                    self._hyster_rec(ri, ci)
 
 
-def hystImageNorm(image):
+def _hyst_word_norm(image):
     """Word normalization using hystheresis thresholding."""
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 #     img = cv2.bilateralFilter(gray, 0, 10, 30)
     img = cv2.bilateralFilter(gray, 10, 10, 30)
-    return HysterThresh(img).getImage()
+    return HysterThresh(img).get_image()
 
 
-def imageNorm(image, height, border=True, tilt=True, borderSize=15, hystNorm=False):
-    """ 
-    Preprocess image
-    => resize, get edges, tilt world
-    """
+def word_normalization(image, height, border=True, tilt=True, border_size=15, hyst_norm=False):
+    """ Preprocess a word - resize, binarize, tilt world."""
     image = resize(image, height, True)
 
-    if hystNorm:
-        th = hystImageNorm(image)
+    if hyst_norm:
+        th = _hyst_word_norm(image)
     else:
         img = cv2.bilateralFilter(image, 0, 30, 30)
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-        edges = sobelDetect(gray)
+        edges = _sobel_detect(gray)
         ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
 
     if tilt:
-        return wordTilt(th, height, border, borderSize)
+        return wordTilt(th, height, border, border_size)
     return th
 
 
-def resizeLetter(img, size = 56):
+def _resize_letter(img, size = 56):
     """Resize bigger side of the image to given size."""
     if (img.shape[0] > img.shape[1]):
         rat = size / img.shape[0]
@@ -183,14 +180,14 @@ def resizeLetter(img, size = 56):
     return img
 
 
-def letterNorm(image, is_thresh=True, dim=False):
-    """Preprocess an image - crop."""
+def letter_normalization(image, is_thresh=True, dim=False):
+    """Preprocess a letter - crop, resize"""
     if is_thresh and image.shape[0] > 0 and image.shape[1] > 0:
-        image = cropAddBorder(image, height=0, threshold=80, border=False) # threshold=80
+        image = _crop_add_border(image, height=0, threshold=80, border=False)
 
     resized = image
     if image.shape[0] > 1 and image.shape[1] > 1:
-        resized = resizeLetter(image)
+        resized = _resize_letter(image)
 
     result = np.zeros((64, 64), np.uint8)
     offset = [0, 0]

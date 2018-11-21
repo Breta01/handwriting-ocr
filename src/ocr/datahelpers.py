@@ -5,10 +5,11 @@ Helper functions for loading and creating datasets
 import numpy as np
 import glob
 import simplejson
+import os
 import cv2
 import unidecode
 from .helpers import implt
-from .normalization import letterNorm
+from .normalization import letter_normalization
 from .viz import print_progress_bar
 
 
@@ -21,60 +22,58 @@ CHARS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
          '7', '8', '9']
 
 idxs = [i for i in range(len(CHARS))]
-idx_to_chars = dict(zip(idxs, CHARS))
-chars_to_idx = dict(zip(CHARS, idxs))
+idx_2_chars = dict(zip(idxs, CHARS))
+chars_2_idx = dict(zip(CHARS, idxs))
 
 def char2idx(c, sequence=False):
     if sequence:
-        return chars_to_idx[c] + 1
-    return chars_to_idx[c]
+        return chars_2_idx[c] + 1
+    return chars_2_idx[c]
 
 def idx2char(idx, sequence=False):
     if sequence:
-        return idx_to_chars[idx-1]
-    return idx_to_chars[idx]
+        return idx_2_chars[idx-1]
+    return idx_2_chars[idx]
     
 
-def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
+def load_words_data(dataloc='data/words/', load_gaplines=True, debug=False):
     """
-    Load word images with corresponding labels and gaplines (if loadGaplines == True).
+    Load word images with corresponding labels and gaplines (if load_gaplines == True).
     Args:
         dataloc: image folder location - can be list of multiple locations,
-        loadGaplines: wheter or not load gaplines positions files
+        load_gaplines: wheter or not load gaplines positions files
         debug: for printing example image
     Returns:
         (images, labels (, gaplines))
     """
     print("Loading words...")
-    imglist = []
-    tmpLabels = []
+    img_list = []
+    tmp_labels = []
     if type(dataloc) is list:
         for loc in dataloc:
-            loc += '/' if loc[-1] != '/' else ''
-            tmpList = glob.glob(loc + '*.jpg')
-            imglist += tmpList
-            tmpLabels += [name[len(loc):].split("_")[0] for name in tmpList]
+            tmp_list = glob.glob(os.path.join(loc, '*.jpg'))
+            img_list += tmp_list
+            tmp_labels += [name[len(loc):].split("_")[0] for name in tmp_list]
     else:
-        dataloc += '/' if dataloc[-1] != '/' else ''
-        imglist = glob.glob(dataloc + '*.jpg')
-        tmpLabels = [name[len(dataloc):].split("_")[0] for name in imglist]
+        img_list = glob.glob(os.path.join(dataloc, '*.jpg'))
+        tmp_labels = [name[len(dataloc):].split("_")[0] for name in img_list]
     
-    labels = np.array(tmpLabels)
-    images = np.empty(len(imglist), dtype=object)
+    labels = np.array(tmp_labels)
+    images = np.empty(len(img_list), dtype=object)
 
     # Load grayscaled images
-    for i, img in enumerate(imglist):
+    for i, img in enumerate(img_list):
         images[i] = cv2.imread(img, 0)
     
     # Load gaplines (lines separating letters) from txt files
-    if loadGaplines:
-        gaplines = np.empty(len(imglist), dtype=object)
-        for i, name in enumerate(imglist):
+    if load_gaplines:
+        gaplines = np.empty(len(img_list), dtype=object)
+        for i, name in enumerate(img_list):
             with open(name[:-3] + 'txt', 'r') as fp:
                 gaplines[i] = np.array(simplejson.load(fp))
                 
     # Check the same lenght of labels and images
-    if loadGaplines:
+    if load_gaplines:
         assert len(labels) == len(images) == len(gaplines)
     else:
         assert len(labels) == len(images)
@@ -84,10 +83,10 @@ def loadWordsData(dataloc='data/words/', loadGaplines=True, debug=False):
     if debug:
         implt(images[-1], 'gray', 'Example')
         print("Word:", labels[-1])
-        if loadGaplines:
+        if load_gaplines:
             print("Gaplines:", gaplines[-1])
     
-    if loadGaplines:
+    if load_gaplines:
         return (images, labels, gaplines)
     return (images, labels)
 
@@ -98,7 +97,7 @@ def _words2chars(images, labels, gaplines):
     length = sum([len(l) for l in labels])
     
     imgs = np.empty(length, dtype=object)
-    newLabels = []
+    new_labels = []
     
     height = images[0].shape[0]
     
@@ -106,14 +105,14 @@ def _words2chars(images, labels, gaplines):
     for i, gaps in enumerate(gaplines):
         for pos in range(len(gaps) - 1):
             imgs[idx] = images[i][0:height, gaps[pos]:gaps[pos+1]]
-            newLabels.append(char2idx(labels[i][pos]))
+            new_labels.append(char2idx(labels[i][pos]))
             idx += 1
            
     print("Loaded chars from words:", length)            
-    return imgs, newLabels
+    return imgs, new_labels
 
 
-def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
+def load_chars_data(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
     """
     Load chars images with corresponding labels.
     Args:
@@ -128,26 +127,26 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
 
     if charloc != '':
         # Get subfolders with chars
-        dirlist = glob.glob(charloc + lang + "/*/")
-        dirlist.sort()    
+        dir_list = glob.glob(os.path.join(charloc, lang, "*/"))
+        dir_list.sort()    
 
         if lang == 'en':
             chars = CHARS[:53]
         else:
             chars = CHARS
-        assert [d[-2] if d[-2] != '0' else '' for d in dirlist] == chars
+        assert [d[-2] if d[-2] != '0' else '' for d in dir_list] == chars
 
         # For every label load images and create corresponding labels
         # cv2.imread(img, 0) - for loading images in grayscale
         # Images are scaled to 64x64 = 4096 px
         for i in range(len(chars)):
-            imglist = glob.glob(dirlist[i] + '*.jpg')
-            imgs = np.array([letterNorm(cv2.imread(img, 0)) for img in imglist])
+            img_list = glob.glob(os.path.join(dir_list[i], '*.jpg'))
+            imgs = np.array([letter_normalization(cv2.imread(img, 0)) for img in img_list])
             images = np.concatenate([images, imgs.reshape(len(imgs), 4096)])
             labels.extend([i] * len(imgs))
         
     if wordloc != '':    
-        imgs, words, gaplines = loadWordsData(wordloc)
+        imgs, words, gaplines = load_words_data(wordloc)
         if lang != 'cz':
              words = np.array([unidecode.unidecode(w) for w in words])
         imgs, chars = _words2chars(imgs, words, gaplines)
@@ -156,7 +155,7 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
         images2 = np.zeros((len(imgs), 4096)) 
         for i in range(len(imgs)):
             print_progress_bar(i, len(imgs))
-            images2[i] = letterNorm(imgs[i]).reshape(1, 4096)
+            images2[i] = letter_normalization(imgs[i]).reshape(1, 4096)
 
         images = np.concatenate([images, images2])          
 
@@ -167,7 +166,7 @@ def loadCharsData(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
     return (images, labels)
 
 
-def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=True):
+def load_gap_data(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=True):
     """ 
     Load gap data from location with corresponding labels.
     Args:
@@ -180,9 +179,8 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
         (images, labels)
     """
     print('Loading gap data...')
-    loc += '/' if loc[-1] != '/' else ''
-    dirlist = glob.glob(loc + "*/")
-    dirlist.sort()
+    dir_list = glob.glob(os.path.join(loc, "*/"))
+    dir_list.sort()
     
     if slider[1] > 120:
         # TODO Implement for higher dimmensions
@@ -192,29 +190,29 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
     cut_e = None if (120 - slider[1]) // 2 <= 0 else -(120 - slider[1]) // 2
     
     if seq:
-        images = np.empty(len(dirlist), dtype=object)
-        labels = np.empty(len(dirlist), dtype=object)
+        images = np.empty(len(dir_list), dtype=object)
+        labels = np.empty(len(dir_list), dtype=object)
         
-        for i, loc in enumerate(dirlist):
+        for i, loc in enumerate(dir_list):
             # TODO Check for empty directories
-            imglist = glob.glob(loc + '*.jpg')
-            if (len(imglist) != 0):
-                imgList = sorted(imglist, key=lambda x: int(x[len(loc):].split("_")[1][:-4]))
+            img_list = glob.glob(os.path.join(loc, '*.jpg'))
+            if (len(img_list) != 0):
+                img_list = sorted(imglist, key=lambda x: int(x[len(loc):].split("_")[1][:-4]))
                 images[i] = np.array([(cv2.imread(img, 0)[:, cut_s:cut_e].flatten() if flatten else
                                        cv2.imread(img, 0)[:, cut_s:cut_e])
-                                      for img in imglist])
-                labels[i] = np.array([int(name[len(loc):].split("_")[0]) for name in imglist])
+                                      for img in img_list])
+                labels[i] = np.array([int(name[len(loc):].split("_")[0]) for name in img_list])
         
     else:
         images = np.zeros((1, slider[0]*slider[1]))
         labels = []
 
-        for i in range(len(dirlist)):
-            imglist = glob.glob(dirlist[i] + '*.jpg')
-            if (len(imglist) != 0):
-                imgs = np.array([cv2.imread(img, 0)[:, cut_s:cut_e] for img in imglist])
+        for i in range(len(dir_list)):
+            img_list = glob.glob(os.path.join(dir_list[i], '*.jpg'))
+            if (len(img_list) != 0):
+                imgs = np.array([cv2.imread(img, 0)[:, cut_s:cut_e] for img in img_list])
                 images = np.concatenate([images, imgs.reshape(len(imgs), slider[0]*slider[1])])
-                labels.extend([int(img[len(dirlist[i])]) for img in imglist])
+                labels.extend([int(img[len(dirlist[i])]) for img in img_list])
 
         images = images[1:]
         labels = np.array(labels)
@@ -227,7 +225,7 @@ def loadGapData(loc='data/gapdet/large/', slider=(60, 120), seq=False, flatten=T
     return (images, labels)    
 
 
-def correspondingShuffle(a):
+def corresponding_shuffle(a):
     """ 
     Shuffle array of numpy arrays such that
     each pair a[x][i] and a[y][i] remains the same.

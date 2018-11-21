@@ -7,6 +7,7 @@ import pandas as pd
 import cv2
 from scipy.ndimage.interpolation import map_coordinates
 
+
 def coordinates_remap(image, factor_alpha, factor_sigma):
     """Transforming image using remaping coordinates."""
     alpha = image.shape[1] * factor_alpha
