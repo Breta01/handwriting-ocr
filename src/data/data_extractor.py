@@ -17,16 +17,23 @@ datasets = {
 
 output_folder = 'words_final'
 
+
+parser = argparse.ArgumentParser(description='Script extracting words from raw dataset.')
+parser.add_argument(
+    '-d', '--dataset',
+    nargs='*',
+    choices=datasets.keys(),
+    help='Pick dataset(s) to be used.')
+parser.add_argument(
+    '-p', '--path',
+    nargs='*',
+    default=[],
+    help="""Path to folder containing the dataset. For multiple datasets
+    provide path or ''. If not filled, default paths will be used.""")
+
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script extracting words from raw dataset.')
-    parser.add_argument('-d', '--dataset', nargs='*', choices=datasets.keys(),
-                        help='Pick dataset(s) to be used.')
-    parser.add_argument('-p', '--path', nargs='*', default=[],
-                        help="""Path to folder containing the dataset. For multiple datasets
-                        provide path or ''. If not filled, default paths will be used.""")
-    args = parser.parse_args()
-    
+    args = parser.parse_args() 
     if args.dataset == 'all':
         args.dataset = datasets.keys()[:-1]
 

@@ -19,7 +19,7 @@ CHARS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
          'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
          'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
          'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6',
-         '7', '8', '9']
+         '7', '8', '9', '.', '-', '+', "'"]
 
 idxs = [i for i in range(len(CHARS))]
 idx_2_chars = dict(zip(idxs, CHARS))
@@ -36,55 +36,76 @@ def idx2char(idx, sequence=False):
     return idx_2_chars[idx]
     
 
-def load_words_data(dataloc='data/words/', load_gaplines=True, debug=False):
+def load_words_data(dataloc='data/words/', is_csv=False, load_gaplines=True):
     """
     Load word images with corresponding labels and gaplines (if load_gaplines == True).
     Args:
-        dataloc: image folder location - can be list of multiple locations,
+        dataloc: image folder location/CSV file - can be list of multiple locations
+        is_csv: using CSV files
         load_gaplines: wheter or not load gaplines positions files
-        debug: for printing example image
     Returns:
         (images, labels (, gaplines))
     """
     print("Loading words...")
-    img_list = []
-    tmp_labels = []
-    if type(dataloc) is list:
+    if type(dataloc) is not list:
+        dataloc = [dataloc]
+
+    if is_csv:
+        length = 0
         for loc in dataloc:
-            tmp_list = glob.glob(os.path.join(loc, '*.jpg'))
+            with open(loc) as csvfile:
+                reader = csv.reader(csvfile)
+                length += max(sum(1 for row in csvfile)-1, 0)
+
+        labels = np.empty(length, dtype=object)
+        images = np.empty(length, dtype=object)
+        i = 0
+        for loc in dataloc:
+            print(loc)
+            with open(loc) as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    shape = np.fromstring(
+                        row['shape'],
+                        sep=',',
+                        dtype=int)
+                    img = np.fromstring(
+                        row['image'],
+                        sep=', ',
+                        dtype=np.uint8).reshape(shape)
+                    labels[i] = row['label']
+                    images[i] = img
+                    
+                    print_progress_bar(i, length)
+                    i += 1
+    else:
+        img_list = []
+        tmp_labels = []
+        for loc in dataloc:
+            tmp_list = glob.glob(os.path.join(loc, '*.png'))
             img_list += tmp_list
             tmp_labels += [name[len(loc):].split("_")[0] for name in tmp_list]
-    else:
-        img_list = glob.glob(os.path.join(dataloc, '*.jpg'))
-        tmp_labels = [name[len(dataloc):].split("_")[0] for name in img_list]
-    
-    labels = np.array(tmp_labels)
-    images = np.empty(len(img_list), dtype=object)
 
-    # Load grayscaled images
-    for i, img in enumerate(img_list):
-        images[i] = cv2.imread(img, 0)
-    
-    # Load gaplines (lines separating letters) from txt files
-    if load_gaplines:
-        gaplines = np.empty(len(img_list), dtype=object)
-        for i, name in enumerate(img_list):
-            with open(name[:-3] + 'txt', 'r') as fp:
-                gaplines[i] = np.array(simplejson.load(fp))
+        labels = np.array(tmp_labels)
+        images = np.empty(len(img_list), dtype=object)
+
+        # Load grayscaled images
+        for i, img in enumerate(img_list):
+            images[i] = cv2.imread(img, 0)
+            print_progress_bar(i, len(img_list))
+
+        # Load gaplines (lines separating letters) from txt files
+        if load_gaplines:
+            gaplines = np.empty(len(img_list), dtype=object)
+            for i, name in enumerate(img_list):
+                with open(name[:-3] + 'txt', 'r') as fp:
+                    gaplines[i] = np.array(simplejson.load(fp))
                 
-    # Check the same lenght of labels and images
     if load_gaplines:
         assert len(labels) == len(images) == len(gaplines)
     else:
         assert len(labels) == len(images)
     print("-> Number of words:", len(labels))
-
-    # Print one of the images (last one)
-    if debug:
-        implt(images[-1], 'gray', 'Example')
-        print("Word:", labels[-1])
-        if load_gaplines:
-            print("Gaplines:", gaplines[-1])
     
     if load_gaplines:
         return (images, labels, gaplines)
@@ -130,10 +151,9 @@ def load_chars_data(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
         dir_list = glob.glob(os.path.join(charloc, lang, "*/"))
         dir_list.sort()    
 
-        if lang == 'en':
-            chars = CHARS[:53]
-        else:
-            chars = CHARS
+        # if lang == 'en':
+        chars = CHARS[:53]
+            
         assert [d[-2] if d[-2] != '0' else '' for d in dir_list] == chars
 
         # For every label load images and create corresponding labels

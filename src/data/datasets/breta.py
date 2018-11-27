@@ -23,7 +23,7 @@ def extract(location, output, number=1):
             img = os.path.join(location, data)
             out = os.path.join(
                 output,
-                '%s_%s_%s.png' % (word, number, data.split('_')[0][:-4)
+                '%s_%s_%s.png' % (word, number, data.split('_')[0][:-4])
             Image.open(img).save(out)
             print_progress_bar(i, len(img_list))
 

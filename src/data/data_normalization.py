@@ -10,14 +10,34 @@ from ocr.normalization import word_normalization
 from ocr.viz import print_progress_bar
 from .data_extractor import datasets
 
+
 data_folder = 'words_final'
-output_folder = os.path.join(location, '../../data/processed/words_norm_')
+output_folder = os.path.join(location, '../../data/processed/')
+
+
+parser = argparse.ArgumentParser(description='Script normalizing words from datasts.')
+parser.add_argument(
+    '-d', '--dataset',
+    nargs='*',
+    choices=datasets.keys(),
+    help='Pick dataset(s) to be used.')
+parser.add_argument(
+    '-p', '--path',
+    nargs='*',
+    default=[],
+    help="""Path to folder containing the dataset. For multiple datasets
+    provide path or ''. If not set, default paths will be used.""")
 
 
 def words_norm(location, output):
     output = os.path.join(location, output)
     if not os.path.exists(output):
         os.makedirs(output)
+    else:
+        print("THIS DATASET IS BEING SKIPPED")
+        print("Output folder already exists:", output)
+        return 1        
+        
     imgs = glob.glob(os.path.join(location, data_folder, '*.png'))
     length = len(imgs)
 
@@ -29,7 +49,7 @@ def words_norm(location, output):
                 os.path.join(output, os.path.basename(img_path)),
                 word_normalization(
                     image,
-                    height=60,
+                    height=64,
                     border=False,
                     tilt=False,
                     hystNorm=False))
@@ -40,18 +60,14 @@ def words_norm(location, output):
 
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script normalizing words from datasts.')
-    parser.add_argument('-d', '--dataset', nargs='*', choices=datasets.keys(),
-                        help='Pick dataset(s) to be used.')
-    parser.add_argument('-p', '--path', nargs='*', default=[],
-                        help="""Path to folder containing the dataset. For multiple datasets
-                        provide path or ''. If not set, default paths will be used.""")
     args = parser.parse_args()
-    
     if args.dataset == 'all':
         args.dataset = datasets.keys()[:-1]
 
     assert args.path == [] or len(args.dataset) == len(args.path), "provide same number of paths as datasets (use '' for default)"
+    
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
     
     for ds in args.dataset:
         print("Processing -", ds)
