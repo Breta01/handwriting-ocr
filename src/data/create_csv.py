@@ -4,6 +4,7 @@ import glob
 import os
 import numpy as np
 import cv2
+
 location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(location, '../'))
 from ocr.viz import print_progress_bar

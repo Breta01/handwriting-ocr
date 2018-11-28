@@ -4,12 +4,13 @@ import os
 import random
 import numpy as np
 import cv2
+
 location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(location, '../'))
 from ocr.viz import print_progress_bar
 from .data_extractor import datasets
-
 from .create_csv import create_csv
+
 
 random.seed(17)  # Make the datasets split random and reproducible
 data_folder = 'words_final'
@@ -48,7 +49,10 @@ if __name__ == '__main__':
         os.makedirs(output_folder)
 
     # imgs = glob.glob(os.path.join(folder, '*/words-final/*.png'))
-    imgs = glob.glob(os.path.join(folder, 'words-final/*.png'))
+    imgs = []
+    for ds in args.dataset:
+        for loc, _, _ in os.walk(os.path.join(folder, ds)):
+            imgs += glob.glob(os.path.join(loc, '*.png'))
 
     imgs.sort()
     random.shuffle(imgs)
@@ -71,4 +75,4 @@ if __name__ == '__main__':
             "\tNumber of %s words: %s" % (split, len(os.listdir(split_output))))
 
     if args.csv:
-        create_csv(output)
+        create_csv(output_folder)

@@ -4,6 +4,7 @@ import cv2
 from PIL import Image
 import os
 import sys
+
 location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(location, '../'))
 from ocr.normalization import word_normalization
@@ -72,4 +73,4 @@ if __name__ == '__main__':
     for ds in args.dataset:
         print("Processing -", ds)
         entry = datasets[ds]
-        words_norm(entry[1], output_folder + entry[2])
+        words_norm(entry[1], os.path.join(output_folder, ds)

@@ -21,7 +21,7 @@ def detection(image):
     # Recalculate to original scale
     page_contour = page_contour.dot(ratio(image))    
     # Transform prespective
-    new_image = _persp_image_transform(image, page_contour)
+    new_image = _persp_transform(image, page_contour)
     return new_image
    
 
@@ -97,7 +97,7 @@ def _find_page_contours(edges, img):
     return _contour_offset(page_contour, (-5, -5))
 
 
-def _persp_image_transform(img, s_points):
+def _persp_transform(img, s_points):
     """Transform perspective from start points to target points."""
     # Euclidean distance - calculate maximum height and width
     height = max(np.linalg.norm(s_points[0] - s_points[1]),

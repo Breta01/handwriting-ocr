@@ -8,11 +8,11 @@ from datasets import breta, iam, cvl, orand, camb
 location = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(location, '../../data/raw/')
 datasets = {
-    'Breta': (breta.extract, os.path.join(data_folder, 'breta'), 1),
-    'IAM': (iam.extract, os.path.join(data_folder, 'ima'), 2),
-    'CVL': (cvl.extract, os.path.join(data_folder, 'cvl'), 3),
-    'ORAND': (orand.extract, os.path.join(data_folder, 'orand'), 4),
-    'Camb': (camb.extract, os.path.join(data_folder, 'camb'), 5),
+    'breta': (breta.extract, os.path.join(data_folder, 'breta'), 1),
+    'iam': (iam.extract, os.path.join(data_folder, 'ima'), 2),
+    'cvl': (cvl.extract, os.path.join(data_folder, 'cvl'), 3),
+    'orand': (orand.extract, os.path.join(data_folder, 'orand'), 4),
+    'camb': (camb.extract, os.path.join(data_folder, 'camb'), 5),
     'all': ()}
 
 output_folder = 'words_final'
