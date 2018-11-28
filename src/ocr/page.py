@@ -4,6 +4,7 @@ Crop background and transform perspective from the photo of page
 """
 import numpy as np
 import cv2
+
 from .helpers import *
 
 def detection(image):
@@ -20,7 +21,7 @@ def detection(image):
     # Recalculate to original scale
     page_contour = page_contour.dot(ratio(image))    
     # Transform prespective
-    new_image = _persp_image_transform(image, pageContour)
+    new_image = _persp_image_transform(image, page_contour)
     return new_image
    
 

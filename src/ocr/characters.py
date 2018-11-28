@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
+import os
 import numpy as np
 import tensorflow as tf
-from .helpers import *
-from .tfhelpers import Model
 import cv2
 import math
+
+from .helpers import *
+from .tfhelpers import Model
 
 # Preloading trained model with activation function
 # Loading is slow -> prevent multiple loads
 print("Loading segmentation models...")
-CNN_model = Model('models/gap-clas/CNN-CG')
+location = os.path.dirname(os.path.abspath(__file__))
+CNN_model = Model(
+    os.path.join(location, '../../models/gap-clas/CNN-CG'))
 CNN_slider = (60, 30)
-RNN_model = Model('models/gap-clas/RNN/Bi-RNN-new', 'prediction')
+RNN_model = Model(
+    os.path.join(location, '../../models/gap-clas/RNN/Bi-RNN-new'),
+    'prediction')
 RNN_slider = (60, 60)
 
 

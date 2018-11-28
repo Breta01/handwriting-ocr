@@ -8,6 +8,7 @@ import simplejson
 import os
 import cv2
 import unidecode
+
 from .helpers import implt
 from .normalization import letter_normalization
 from .viz import print_progress_bar
@@ -36,7 +37,7 @@ def idx2char(idx, sequence=False):
     return idx_2_chars[idx]
     
 
-def load_words_data(dataloc='data/words/', is_csv=False, load_gaplines=True):
+def load_words_data(dataloc='data/words/', is_csv=False, load_gaplines=False):
     """
     Load word images with corresponding labels and gaplines (if load_gaplines == True).
     Args:

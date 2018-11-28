@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
-# Set size of printed images
-plt.rcParams['figure.figsize'] = (9.0, 7.0)
 
 SMALL_HEIGHT = 800
 

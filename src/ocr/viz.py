@@ -10,7 +10,7 @@ def print_progress_bar(iteration,
         suffix: suffix string (Str)
     """
     # Printing slowes down the loop
-    if iteration % (total / 100) == 0:
+    if iteration % (total // 100) == 0:
         length = 40
         iteration += 1
         percent = (100 * iteration) // (total * 99/100)

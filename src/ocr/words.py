@@ -6,6 +6,7 @@ return array of words' bounding boxes
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+
 from .helpers import *
 
 
@@ -21,6 +22,29 @@ def detection(image, join=False):
                               np.ones((15,15), np.uint8))
 
     return _text_detect(bw_img, image, join)
+
+
+def sort_words(boxes):
+    """Sort boxes - (x, y, x+w, y+h) from left to right, top to bottom."""
+    mean_height = sum([y2 - y1 for _, y1, _, y2 in boxes]) / len(boxes)
+    
+    boxes.view('i8,i8,i8,i8').sort(order=['f1'], axis=0)
+    current_line = boxes[0][1]
+    lines = []
+    tmp_line = []
+    for box in boxes:
+        if box[1] > current_line + mean_height:
+            lines.append(tmp_line)
+            tmp_line = [box]
+            current_line = box[1]            
+            continue
+        tmp_line.append(box)
+    lines.append(tmp_line)
+        
+    for line in lines:
+        line.sort(key=lambda box: box[0])
+        
+    return lines
 
 
 def _edge_detect(im):
@@ -130,7 +154,7 @@ def _text_detect(img, image, join=False):
     implt(small, t='Bounding rectangles')
     
     boxes = bounding_boxes.dot(ratio(image, small.shape[0])).astype(np.int64)
-    return bBoxes[1:]  
+    return boxes[1:]  
     
 
 def textDetectWatershed(thresh):

@@ -6,6 +6,7 @@ Main functions: word_normalization, letter_normalization, image_standardization
 import numpy as np
 import cv2
 import math
+
 from .helpers import *
 
 
@@ -165,7 +166,7 @@ def word_normalization(image, height, border=True, tilt=True, border_size=15, hy
         ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
 
     if tilt:
-        return wordTilt(th, height, border, border_size)
+        return _word_tilt(th, height, border, border_size)
     return th
 
 
