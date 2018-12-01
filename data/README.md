@@ -2,7 +2,7 @@
 # Datasets
 This folder should contain all data used in the project. Most of the data are too large to be included here, so you **have to download them and placed them according to instructions below.** If you have any suggestion or issues with the dataset, send me an email or create a new issue in the repository. 
 
-## Words’ datasets
+## Words datasets
 All together it should total in about 188000 images. After extraction, each word is named as: `<word>_<dataset-num>_<timestamp>.png`. The way of labelling can be changed, currently '_' is prohibited in all words. The number of a dataset is written behind each name in brackets. For example: `car_1_1528457794.9072268.png` - file corresponds to the image of a word 'car' from Breta’s data.
 
 After downloading these datasets, there are scripts in `src/data/` folder which extract words from each dataset and place them in `words-final/` folder under each dataset folder. Another script takes all words from all `words-final/` folders and normalized them. Normalized words are placed in `processed/` folder. Finally, you run the script which separates data into training, validation and test sets, placing them into `sets/` folder.
