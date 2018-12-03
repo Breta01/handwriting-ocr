@@ -31,7 +31,7 @@ def ratio(img, height=SMALL_HEIGHT):
     return img.shape[0] / height
 
 
-def extendImg(img, shape):
+def img_extend(img, shape):
     """Extend 2D image (numpy array) in vertical and horizontal direction.
     Shape of result image will match 'shape'
     Args:

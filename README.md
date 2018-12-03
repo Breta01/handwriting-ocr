@@ -26,7 +26,7 @@ The project is created using Python 3.6 with Jupyter Notebook. I recommend using
 conda create --name ocr-env --file environment.yml
 conda activate ocr-env
 ```
-Main libraries (all required libraries are in [environment.yml](environment.yml):
+Main libraries (all required libraries are in [environment.yml](environment.yml)):
 * Numpy (1.13)
 * Tensorflow (1.4)
 * OpenCV (3.1)

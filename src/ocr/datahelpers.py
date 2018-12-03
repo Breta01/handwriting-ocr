@@ -167,7 +167,7 @@ def load_chars_data(charloc='data/charclas/', wordloc='data/words/', lang='cz'):
             labels.extend([i] * len(imgs))
         
     if wordloc != '':    
-        imgs, words, gaplines = load_words_data(wordloc)
+        imgs, words, gaplines = load_words_data(wordloc, load_gaplines=True)
         if lang != 'cz':
              words = np.array([unidecode.unidecode(w) for w in words])
         imgs, chars = _words2chars(imgs, words, gaplines)
