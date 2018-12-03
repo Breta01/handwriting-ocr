@@ -100,7 +100,7 @@ ENV/
 
 # Data + Models + Notes
 # They're too big
-data/
+/data/
 doc/
 models/
 logs/
