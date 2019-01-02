@@ -32,7 +32,7 @@ def extract(location, output, number=4):
                             output,
                             '%s_%s_%s.png' % (word, number, time.time()))
                         copyfile(impath, outpath)
-                    print_progress_bar(i, length)
+                    print_progress_bar(itr, length)
                     itr += 1
 
     print("\tNumber of words:", len([n for n in os.listdir(output)]))

@@ -2,14 +2,13 @@ import argparse
 import os
 import sys
 
-from datasets import breta, iam, cvl, orand, camb
-
+from datasets import breta, camb, cvl, iam, orand
 
 location = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(location, '../../data/raw/')
 datasets = {
     'breta': (breta.extract, os.path.join(data_folder, 'breta'), 1),
-    'iam': (iam.extract, os.path.join(data_folder, 'ima'), 2),
+    'iam': (iam.extract, os.path.join(data_folder, 'iam'), 2),
     'cvl': (cvl.extract, os.path.join(data_folder, 'cvl'), 3),
     'orand': (orand.extract, os.path.join(data_folder, 'orand'), 4),
     'camb': (camb.extract, os.path.join(data_folder, 'camb'), 5),
@@ -24,18 +23,19 @@ parser.add_argument(
     nargs='*',
     choices=datasets.keys(),
     help='Pick dataset(s) to be used.')
-parser.add_argument(
-    '-p', '--path',
-    nargs='*',
-    default=[],
-    help="""Path to folder containing the dataset. For multiple datasets
-    provide path or ''. If not filled, default paths will be used.""")
+# @TODO Add different path handling
+# parser.add_argument(
+#     '-p', '--path',
+#     nargs='*',
+#     default=[],
+#     help="""Path to folder containing the dataset. For multiple datasets
+#     provide path or ''. If not filled, default paths will be used.""")
 
     
 if __name__ == '__main__':
     args = parser.parse_args() 
-    if args.dataset == 'all':
-        args.dataset = datasets.keys()[:-1]
+    if args.dataset == ['all']:
+        args.dataset = list(datasets.keys())[:-1]
 
     assert args.path == [] or len(args.dataset) == len(args.path), "provide same number of paths as datasets (use '' for default)"
     

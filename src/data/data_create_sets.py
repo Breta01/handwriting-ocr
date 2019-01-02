@@ -2,14 +2,17 @@ import argparse
 import glob
 import os
 import random
-import numpy as np
+import sys
+
 import cv2
+import numpy as np
+
+from create_csv import create_csv
+from data_extractor import datasets
+from ocr.viz import print_progress_bar
 
 location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(location, '../'))
-from ocr.viz import print_progress_bar
-from .data_extractor import datasets
-from .create_csv import create_csv
 
 
 random.seed(17)  # Make the datasets split random and reproducible
@@ -24,12 +27,12 @@ parser.add_argument(
     nargs='*',
     choices=datasets.keys(),
     help='Pick dataset(s) to be used.')
-parser.add_argument(
-    '-p', '--path',
-    nargs='*',
-    default=[],
-    help="""Path to folder containing the dataset. For multiple datasets
-    provide path or ''. If not set, default paths will be used.""")
+# parser.add_argument(
+#     '-p', '--path',
+#     nargs='*',
+#     default=[],
+#     help="""Path to folder containing the dataset. For multiple datasets
+#     provide path or ''. If not set, default paths will be used.""")
 parser.add_argument(
     '--output',
     default='data-handwriting/sets',
@@ -43,7 +46,8 @@ parser.add_argument(
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    folder = args.data
+    if args.dataset == ['all']:
+        args.dataset = list(datasets.keys())[:-1]
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -51,7 +55,7 @@ if __name__ == '__main__':
     # imgs = glob.glob(os.path.join(folder, '*/words-final/*.png'))
     imgs = []
     for ds in args.dataset:
-        for loc, _, _ in os.walk(os.path.join(folder, ds)):
+        for loc, _, _ in os.walk(datasets[ds][1].replace("raw", "processed")):
             imgs += glob.glob(os.path.join(loc, '*.png'))
 
     imgs.sort()

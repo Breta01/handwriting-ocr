@@ -28,7 +28,7 @@ def extract(location, output, number=3):
             if d.check(word) and os.stat(im).st_size != 0:
                 outpath = os.path.join(
                     output,
-                    '%s_%s_%s.png' % (word, datasetNum, time.time()))
+                    '%s_%s_%s.png' % (word, number, time.time()))
                 Image.open(im).save(outpath)
             print_progress_bar(i, len(images))
 

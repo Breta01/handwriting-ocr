@@ -1,15 +1,18 @@
+import argparse
 import glob
-import numpy as np
-import cv2
-from PIL import Image
 import os
 import sys
 
-location = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(location, '../'))
+import cv2
+import numpy as np
+from PIL import Image
+
+from data_extractor import datasets
 from ocr.normalization import word_normalization
 from ocr.viz import print_progress_bar
-from .data_extractor import datasets
+
+location = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(location, '../'))
 
 
 data_folder = 'words_final'
@@ -22,12 +25,12 @@ parser.add_argument(
     nargs='*',
     choices=datasets.keys(),
     help='Pick dataset(s) to be used.')
-parser.add_argument(
-    '-p', '--path',
-    nargs='*',
-    default=[],
-    help="""Path to folder containing the dataset. For multiple datasets
-    provide path or ''. If not set, default paths will be used.""")
+# parser.add_argument(
+#     '-p', '--path',
+#     nargs='*',
+#     default=[],
+#     help="""Path to folder containing the dataset. For multiple datasets
+#     provide path or ''. If not set, default paths will be used.""")
 
 
 def words_norm(location, output):
@@ -53,7 +56,8 @@ def words_norm(location, output):
                     height=64,
                     border=False,
                     tilt=False,
-                    hystNorm=False))
+                    hyst_norm=False))
+        print(i)
         print_progress_bar(i, len(imgs))
         
     print("\tNumber of normalized words:",
@@ -62,10 +66,11 @@ def words_norm(location, output):
     
 if __name__ == '__main__':
     args = parser.parse_args()
-    if args.dataset == 'all':
-        args.dataset = datasets.keys()[:-1]
+    print(args.dataset)
+    if args.dataset == ['all']:
+        args.dataset = list(datasets.keys())[:-1]
 
-    assert args.path == [] or len(args.dataset) == len(args.path), "provide same number of paths as datasets (use '' for default)"
+    # assert args.path == [] or len(args.dataset) == len(args.path), "provide same number of paths as datasets (use '' for default)"
     
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -73,4 +78,4 @@ if __name__ == '__main__':
     for ds in args.dataset:
         print("Processing -", ds)
         entry = datasets[ds]
-        words_norm(entry[1], os.path.join(output_folder, ds)
+        words_norm(entry[1], os.path.join(output_folder, ds))

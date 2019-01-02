@@ -4,6 +4,8 @@ import numpy as np
 import os
 import sys
 import time
+import gzip
+import shutil
 # Allow accesing files relative to this file
 location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(location, '../../'))
@@ -22,6 +24,10 @@ def extract(location, output, number=5):
 
         itr = 0
         for fl in seg_files:
+            # Uncompressing tiff files
+            with gzip.open(fl[:-4] + '.tiff.gz', 'rb') as f_in:
+                with open(fl[:-4] + '.tiff', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
             image = cv2.imread(fl[:-4] + ".tiff")
             with open(fl) as f:
                 f.readline()
