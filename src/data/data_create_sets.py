@@ -3,21 +3,26 @@ import glob
 import os
 import random
 import sys
+from shutil import copyfile
 
 import cv2
 import numpy as np
+
+location = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(location, '../'))
 
 from create_csv import create_csv
 from data_extractor import datasets
 from ocr.viz import print_progress_bar
 
-location = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(location, '../'))
 
-
-random.seed(17)  # Make the datasets split random and reproducible
+random.seed(17)  # Make the datasets split random, but reproducible
 data_folder = 'words_final'
 output_folder = os.path.join(location, '../../data/sets/')
+
+# Sets percent distribution
+test_set = 0.1
+validation_set = 0.1
 
 
 parser = argparse.ArgumentParser(
@@ -27,12 +32,12 @@ parser.add_argument(
     nargs='*',
     choices=datasets.keys(),
     help='Pick dataset(s) to be used.')
-# parser.add_argument(
-#     '-p', '--path',
-#     nargs='*',
-#     default=[],
-#     help="""Path to folder containing the dataset. For multiple datasets
-#     provide path or ''. If not set, default paths will be used.""")
+parser.add_argument(
+    '-p', '--path',
+    nargs='*',
+    default=[],
+    help="""Path to folder containing the dataset. For multiple datasets
+    provide path or ''. If not set, default paths will be used.""")
 parser.add_argument(
     '--output',
     default='data-handwriting/sets',
@@ -49,10 +54,15 @@ if __name__ == '__main__':
     if args.dataset == ['all']:
         args.dataset = list(datasets.keys())[:-1]
 
+    assert args.path == [] or len(args.dataset) == len(args.path), \
+        "provide same number of paths as datasets (use '' for default)"
+    if args.path != []:
+        for ds, path in zip(args.dataset, args.path):
+            datasets[ds][1] = path
+
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    # imgs = glob.glob(os.path.join(folder, '*/words-final/*.png'))
     imgs = []
     for ds in args.dataset:
         for loc, _, _ in os.walk(datasets[ds][1].replace("raw", "processed")):
@@ -62,8 +72,8 @@ if __name__ == '__main__':
     random.shuffle(imgs)
     
     length = len(imgs)
-    sp1 = int(0.8 * length)
-    sp2 = int(0.9 * length)
+    sp1 = int((1 - test_set - validation_set) * length)
+    sp2 = int((1 - test_set) * length)
     img_paths = {'train': imgs[:sp1], 'dev': imgs[sp1:sp2], 'test': imgs[sp2:]}
     
     i = 0
@@ -72,11 +82,17 @@ if __name__ == '__main__':
         if not os.path.exists(split_output):
             os.mkdir(split_output)
         for im_path in img_paths[split]:
-            # Copy image
+            copyfile(im_path, os.path.join(split_output, os.path.basename(im_path)))
+            if '_gaplines' in im_path:
+                im_path = im_path[:-3] + 'txt' 
+                copyfile(
+                    im_path, os.path.join(split_output, os.path.basename(im_path)))
+
             print_progress_bar(i, length)
             i += 1
+
         print(
-            "\tNumber of %s words: %s" % (split, len(os.listdir(split_output))))
+            "\n\tNumber of %s words: %s" % (split, len(os.listdir(split_output))))
 
     if args.csv:
         create_csv(output_folder)

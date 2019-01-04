@@ -2,8 +2,11 @@ import argparse
 import csv
 import glob
 import os
-import numpy as np
+import sys
+
 import cv2
+import numpy as np
+import simplejson
 
 location = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(location, '../'))
@@ -13,7 +16,7 @@ from ocr.viz import print_progress_bar
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--sets',
-    default=os.path.join(location, '../../data/sets/')
+    default=os.path.join(location, '../../data/sets/'),
     help="Folder with sets for converting to CSV.")
 
 
@@ -31,18 +34,23 @@ def create_csv(datadir):
         images = np.empty(length, dtype=object)
 
         for i, img in enumerate(img_paths[split]):
+            gaplines = 'None'
+            if os.path.isfile(img[:-3] + 'txt'):
+                with open(img[:-3] + 'txt', 'r') as fp:
+                    gaplines = str(simplejson.load(fp))[1:-1]
+            images[i] = (cv2.imread(img, 0), gaplines)
             print_progress_bar(i, length)
-            images[i] = cv2.imread(img, 0)
 
         with open(os.path.join(datadir, split + '.csv'), 'w') as csvfile:
-            fieldnames = ['label', 'shape', 'image']
+            fieldnames = ['label', 'shape', 'image', 'gaplines']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for i in range(length):
                 writer.writerow({
                     fieldnames[0]: labels[i],
                     fieldnames[1]: str(images[i].shape)[1:-1],
-                    fieldnames[2]: str(list(images[i].flatten()))[1:-1]
+                    fieldnames[2]: str(list(images[i][0].flatten()))[1:-1],
+                    fieldnames[3]: images[i][1]
                 })
 
     print('\tCSV files created!')

@@ -160,10 +160,10 @@ def word_normalization(image, height, border=True, tilt=True, border_size=15, hy
     if hyst_norm:
         th = _hyst_word_norm(image)
     else:
-        img = cv2.bilateralFilter(image, 0, 30, 30)
-        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        edges = _sobel_detect(gray)
-        ret,th = cv2.threshold(edges, 50, 255, cv2.THRESH_TOZERO)
+        img = cv2.bilateralFilter(image, 10, 30, 30)
+        gray = 255 - cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        norm = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+        ret,th = cv2.threshold(norm, 50, 255, cv2.THRESH_TOZERO)
 
     if tilt:
         return _word_tilt(th, height, border, border_size)
