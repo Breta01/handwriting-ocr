@@ -48,7 +48,7 @@ def create_csv(datadir):
             for i in range(length):
                 writer.writerow({
                     fieldnames[0]: labels[i],
-                    fieldnames[1]: str(images[i].shape)[1:-1],
+                    fieldnames[1]: str(images[i][0].shape)[1:-1],
                     fieldnames[2]: str(list(images[i][0].flatten()))[1:-1],
                     fieldnames[3]: images[i][1]
                 })

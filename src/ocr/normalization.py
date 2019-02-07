@@ -167,7 +167,7 @@ def word_normalization(image, height, border=True, tilt=True, border_size=15, hy
 
     if tilt:
         return _word_tilt(th, height, border, border_size)
-    return th
+    return _crop_add_border(th, height, border, border_size)
 
 
 def _resize_letter(img, size = 56):

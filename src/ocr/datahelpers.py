@@ -21,7 +21,7 @@ CHARS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
          'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
          'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6',
          '7', '8', '9', '.', '-', '+', "'"]
-
+CHAR_SIZE = len(CHARS)
 idxs = [i for i in range(len(CHARS))]
 idx_2_chars = dict(zip(idxs, CHARS))
 chars_2_idx = dict(zip(CHARS, idxs))
