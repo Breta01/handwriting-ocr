@@ -1,4 +1,4 @@
-import enchant
+import unidecode
 import glob
 import os
 import sys
@@ -20,12 +20,11 @@ def extract(location, output, number=3):
         folder = os.path.join(location, sub)
         images = glob.glob(os.path.join(folder, 'words', '*', '*.tif'))
 
-        d = enchant.Dict('en_US')
-
         for i, im in enumerate(images):
             word = re.search('\/\d+-\d+-\d+-\d+-(.+?).tif', im).group(1)
+            word = unidecode.unidecode(word)
 
-            if d.check(word) and os.stat(im).st_size != 0:
+            if os.stat(im).st_size != 0:
                 outpath = os.path.join(
                     output,
                     '%s_%s_%s.png' % (word, number, time.time()))
