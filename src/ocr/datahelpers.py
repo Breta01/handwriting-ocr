@@ -7,6 +7,8 @@ import glob
 import simplejson
 import os
 import cv2
+import csv
+import sys
 import unidecode
 
 from .helpers import implt
@@ -52,6 +54,7 @@ def load_words_data(dataloc='data/words/', is_csv=False, load_gaplines=False):
         dataloc = [dataloc]
 
     if is_csv:
+        csv.field_size_limit(sys.maxsize)
         length = 0
         for loc in dataloc:
             with open(loc) as csvfile:
