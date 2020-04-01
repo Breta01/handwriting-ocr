@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Helper functions for ocr project
-"""
+# Copyright 2020 Břetislav Hájek
+# Licensed under the MIT License. See LICENSE for details.
+"""Helper functions for ocr project."""
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
