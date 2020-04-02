@@ -9,9 +9,10 @@ After downloading these datasets, there are scripts in `src/data/` folder which 
 
 ### Breta’s data (1)
 *5000 images*  
-All data owned by [@Breta01](https://github.com/Breta01) are available on this link (distributed under the same license as this repository). The data should be placed either in `raw/breta/` or `processed/breta/` folder according to their location in archive from the link below. (I removed the Czech accents from words. If you want to use them, you have to recover them using CSV files containing: `word_without_accents, original_word` in UTF-8 encoding.)
+All data owned by [@Breta01](https://github.com/Breta01) are available on this link (distributed under the same license as this repository). The data should be placed either in `raw/breta/` or `processed/breta/` folder accordingly (see links below). (I removed the Czech accents from words. If you want to use them, you have to recover them using CSV files containing: `word_without_accents, original_word` in UTF-8 encoding.)
 
-<https://drive.google.com/file/d/0Bw95a8U_pp2aakE0emZraHpHczA/view?usp=sharing>
+`raw/breta/`: <https://drive.google.com/file/d/1y6Kkcfk4DkEacdy34HJtwjPVa1ZhyBgg/view?usp=sharing>  
+`processed/brata/`: <https://drive.google.com/file/d/1p7tZWzK0yWZO35lipNZ_9wnfXRNIZOqj/view?usp=sharing>
 
 ### IAM Handwriting Database (2)
 *85000 images*  
