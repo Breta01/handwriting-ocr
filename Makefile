@@ -40,6 +40,10 @@ lint: venv
 	${PYTHON} -m pylint src
 	${PYTHON} -m flake8 src
 
+data:
+	${PYTHON} src/data/data_loader.py
+
+
 clean:
 	find . -name '*.pyc' -exec rm --force {} +
 	rm -rf $(VENV_NAME) *.eggs *.egg-info dist build docs/_build .cache

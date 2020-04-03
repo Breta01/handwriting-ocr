@@ -4,22 +4,26 @@ from abc import ABCMeta, abstractmethod
 import os
 from pathlib import Path
 import sys
+import tarfile
 import urllib.request
+import zipfile
 
 import gdown
 from tqdm import tqdm
 
 
 class Progressbar(tqdm):
+    """Helper class for download progressbar."""
+
     def update_to(self, b=1, bsize=1, tsize=None):
         if tsize is not None:
             self.total = tsize
         self.update(b * bsize - self.n)
 
 
-def download_url(url, path, username=None, password=None):
+def download_url(url, output, username=None, password=None):
     if "drive.google.com" in url:
-        gdown.download(url, output, quiet=False)
+        gdown.download(url, str(output), quiet=False)
         return
 
     if username or password:
@@ -34,41 +38,45 @@ def download_url(url, path, username=None, password=None):
     with Progressbar(
         unit="B", unit_scale=True, miniters=1, desc=url.split("/")[-1]
     ) as t:
-        urllib.request.urlretrieve(url, filename=path, reporthook=t.update_to)
+        urllib.request.urlretrieve(url, filename=output, reporthook=t.update_to)
 
 
 class Data(metaclass=ABCMeta):
-    self.username, self.password = None, None
+    """Abstract class for managing data."""
+
+    username, password = None, None
 
     @abstractmethod
     def load(self, data_path):
         pass
 
     def download(self, data_path):
-        print(f"Downloading dataset {self.name}...")
+        print(f"Collecting dataset {self.name}...")
         for url, f, folder in self.files:
-            folder = data_path.joinpath(folder)
+            folder = data_path.joinpath(folder, self.name)
             output = folder.joinpath(f)
             if not folder.exists():
                 folder.mkdir(parents=True, exist_ok=True)
                 download_url(url, output, self.username, self.password)
-                if output.suffix in [".zip", ".gz", ".tgz"]:
+                if output.suffix in [".zip", ".gz", ".tgz", ".tar"]:
                     self.file_extract(output)
+                    output.unlink()
 
     def file_extract(self, file_path):
         print(f"Extracting {file_path} file...")
-        out_path = file_path.with_suffix("")
-
         if file_path.suffix == ".zip":
-            oepn_file = lambda x: zipfile.ZipFile(x, "r")
-        elif file_path.suffix in [".gz", ".tgz"]:
+            open_file = lambda x: zipfile.ZipFile(x, "r")
+        elif file_path.suffix in [".gz", ".tgz", ".tar"]:
             open_file = lambda x: tarfile.open(x, "r:gz")
 
-        with open_file(self.name) as data_file:
-            data_file.extractall(out_path, data_dir)
+        out_path = file_path.parent
+        with open_file(file_path) as data_file:
+            data_file.extractall(out_path)
 
 
-class Breta:
+class Breta(Data):
+    """Handwriting data from Břetislav Hájek."""
+
     def __init__(self, name="breta"):
         self.name = name
         self.files = [
@@ -76,10 +84,30 @@ class Breta:
                 "https://drive.google.com/uc?id=1p7tZWzK0yWZO35lipNZ_9wnfXRNIZOqj",
                 "data.zip",
                 "raw",
-            )(
+            ),
+            (
                 "https://drive.google.com/uc?id=1y6Kkcfk4DkEacdy34HJtwjPVa1ZhyBgg",
                 "data.zip",
                 "processed",
+            ),
+        ]
+
+    def load(self, data_path):
+        pass
+
+
+class CVL(Data):
+    """CVL Database
+    More info at: https://zenodo.org/record/1492267#.Xob4lPGxXeR
+    """
+
+    def __init__(self, name="cvl"):
+        self.name = name
+        self.files = [
+            (
+                "https://zenodo.org/record/1492267/files/cvl-database-1-1.zip",
+                "cvl-database-1-1.zip",
+                "raw",
             )
         ]
 
@@ -87,5 +115,71 @@ class Breta:
         pass
 
 
+class IAM(Data):
+    """IAM Handwriting Database
+    More info at: http://www.fki.inf.unibe.ch/databases/iam-handwriting-database
+    """
+
+    def __init__(self, name="iam"):
+        # TODO: Require password (link reg. page), handle for errors
+        self.name = name
+        self.files = [
+            (
+                "http://www.fki.inf.unibe.ch/DBs/iamDB/data/ascii/lines.txt",
+                "lines.txt",
+                "raw",
+            ),
+            (
+                "http://www.fki.inf.unibe.ch/DBs/iamDB/data/lines/lines.tgz",
+                "lines.tgz",
+                "raw",
+            ),
+        ]
+
+    def load(self, data_path):
+        pass
+
+
+class ORAND(Data):
+    """ORAND CAR 2014 dataset
+    More info at: https://www.orand.cl/icfhr2014-hdsr/#datasets
+    """
+
+    def __init__(self, name="orand"):
+        self.name = name
+        self.files = [
+            (
+                "https://www.orand.cl/orand_car/ORAND-CAR-2014.tar.gz",
+                "ORAND-CAR-2014.tar.gz",
+                "raw",
+            )
+        ]
+
+    def load(self, data_path):
+        pass
+
+
+class Camb(Daa):
+    """Cambridge Handwriting Database
+    More info at: ftp://svr-ftp.eng.cam.ac.uk/pub/data/handwriting_databases.README
+    """
+
+    def __init__(self, name="camb"):
+        self.name = name
+        self.files = [
+            (
+                "ftp://svr-ftp.eng.cam.ac.uk/pub/data/handwriting_databases.README",
+                "handwriting_databases.README",
+                "raw",
+            ),
+            ("ftp://svr-ftp.eng.cam.ac.uk/pub/data/lob.tar", "lob.tar" "raw"),
+            ("ftp://svr-ftp.eng.cam.ac.uk/pub/data/numbers.tar", "numbers.tar" "raw"),
+        ]
+
+
 if __name__ == "__main__":
-    Breta().download()
+    data_folder = Path(__file__).parent.joinpath("../../data/")
+
+    datasets = [Breta(), CVL(), IAM(), ORAND(), Camb()]
+    for d in datasets:
+        d.download(data_folder)
