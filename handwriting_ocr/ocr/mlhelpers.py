@@ -14,6 +14,7 @@ class TrainingPlot:
     REUIRES notebook backend: %matplotlib notebook
     @TODO Migrate to Tensorboard
     """
+
     train_loss = []
     train_acc = []
     valid_acc = []
@@ -37,12 +38,12 @@ class TrainingPlot:
         self._update_plot()
 
         # Description
-        self.ax1.set_xlabel('Iteration')
-        self.ax1.set_ylabel('Train Loss')
-        self.ax2.set_ylabel('Valid. Accuracy')
+        self.ax1.set_xlabel("Iteration")
+        self.ax1.set_ylabel("Train Loss")
+        self.ax2.set_ylabel("Valid. Accuracy")
 
         # Axes limits
-        self.ax1.set_ylim([0,10])
+        self.ax1.set_ylim([0, 10])
 
     def _update_plot(self):
         self.fig.canvas.draw()
@@ -51,8 +52,12 @@ class TrainingPlot:
         self.trainLoss.append(loss_train)
         if len(self.train_loss) == 1:
             self.ax1.set_ylim([0, min(10, math.ceil(loss_train))])
-        self.ax1.plot(self.lossInterval * np.arange(len(self.train_loss)),
-                      self.train_loss, 'b', linewidth=1.0)
+        self.ax1.plot(
+            self.lossInterval * np.arange(len(self.train_loss)),
+            self.train_loss,
+            "b",
+            linewidth=1.0,
+        )
 
         self.updatePlot()
 
@@ -60,18 +65,27 @@ class TrainingPlot:
         self.validAcc.append(acc_val)
         self.trainAcc.append(acc_train)
 
-        self.ax2.plot(self.test_iter * np.arange(len(self.valid_acc)),
-                      self.valid_acc, 'r', linewidth=1.0)
-        self.ax2.plot(self.test_iter * np.arange(len(self.train_acc)),
-                      self.train_acc, 'g',linewidth=1.0)
+        self.ax2.plot(
+            self.test_iter * np.arange(len(self.valid_acc)),
+            self.valid_acc,
+            "r",
+            linewidth=1.0,
+        )
+        self.ax2.plot(
+            self.test_iter * np.arange(len(self.train_acc)),
+            self.train_acc,
+            "g",
+            linewidth=1.0,
+        )
 
-        self.ax2.set_title('Valid. Accuracy: {:.4f}'.format(self.valid_acc[-1]))
+        self.ax2.set_title("Valid. Accuracy: {:.4f}".format(self.valid_acc[-1]))
 
         self.updatePlot()
 
 
 class DataSet:
     """Class for training data and feeding train function."""
+
     images = None
     labels = None
     length = 0

@@ -14,7 +14,7 @@ def image_standardization(image):
     """Image standardization should result in same output 
     as tf.image.per_image_standardization.
     """
-    return (image - np.mean(image)) / max(np.std(image), 1.0/math.sqrt(image.size))
+    return (image - np.mean(image)) / max(np.std(image), 1.0 / math.sqrt(image.size))
 
 
 def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
@@ -33,7 +33,7 @@ def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
             break
     for i in reversed(range(img.shape[0])):
         if np.count_nonzero(img[i, :]) > 1:
-            y1 = i+1
+            y1 = i + 1
             break
     for i in range(img.shape[1]):
         if np.count_nonzero(img[:, i]) > 1:
@@ -41,7 +41,7 @@ def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
             break
     for i in reversed(range(img.shape[1])):
         if np.count_nonzero(img[:, i]) > 1:
-            x1 = i+1
+            x1 = i + 1
             break
 
     if height != 0:
@@ -50,23 +50,25 @@ def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
         img = img[y0:y1, x0:x1]
 
     if border:
-        return cv2.copyMakeBorder(img, 0, 0, border_size, border_size,
-                                  cv2.BORDER_CONSTANT,
-                                  value=[0, 0, 0])
+        return cv2.copyMakeBorder(
+            img, 0, 0, border_size, border_size, cv2.BORDER_CONSTANT, value=[0, 0, 0]
+        )
     return img
 
 
 def _word_tilt(img, height, border=True, border_size=15):
     """Detect the angle and tilt the image."""
-    edges = cv2.Canny(img, 50, 150, apertureSize = 3)
-    lines = cv2.HoughLines(edges, 1, np.pi/180, 30)
+    edges = cv2.Canny(img, 50, 150, apertureSize=3)
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, 30)
 
     if lines is not None:
         meanAngle = 0
         # Set min number of valid lines (try higher)
         numLines = np.sum(1 for l in lines if l[0][1] < 0.7 or l[0][1] > 2.6)
         if numLines > 1:
-            meanAngle = np.mean([l[0][1] for l in lines if l[0][1] < 0.7 or l[0][1] > 2.6])
+            meanAngle = np.mean(
+                [l[0][1] for l in lines if l[0][1] < 0.7 or l[0][1] > 2.6]
+            )
 
         # Look for angle with correct value
         if meanAngle != 0 and (meanAngle < 0.7 or meanAngle > 2.6):
@@ -78,23 +80,21 @@ def _tilt_by_angle(img, angle, height):
     """Tilt the image by given angle."""
     dist = np.tan(angle) * height
     width = len(img[0])
-    sPoints = np.float32([[0,0], [0,height], [width,height], [width,0]])
+    sPoints = np.float32([[0, 0], [0, height], [width, height], [width, 0]])
 
     # Dist is positive for angle < 0.7; negative for angle > 2.6
     # Image must be shifed to right
     if dist > 0:
-        tPoints = np.float32([[0,0],
-                              [dist,height],
-                              [width+dist,height],
-                              [width,0]])
+        tPoints = np.float32(
+            [[0, 0], [dist, height], [width + dist, height], [width, 0]]
+        )
     else:
-        tPoints = np.float32([[-dist,0],
-                              [0,height],
-                              [width,height],
-                              [width-dist,0]])
+        tPoints = np.float32(
+            [[-dist, 0], [0, height], [width, height], [width - dist, 0]]
+        )
 
     M = cv2.getPerspectiveTransform(sPoints, tPoints)
-    return cv2.warpPerspective(img, M, (int(width+abs(dist)), height))
+    return cv2.warpPerspective(img, M, (int(width + abs(dist)), height))
 
 
 def _sobel_detect(channel):
@@ -111,7 +111,7 @@ class HysterThresh:
     def __init__(self, img):
         img = 255 - img
         img = (img - np.min(img)) / (np.max(img) - np.min(img)) * 255
-        hist, bins = np.histogram(img.ravel(), 256, [0,256])
+        hist, bins = np.histogram(img.ravel(), 256, [0, 256])
 
         self.high = np.argmax(hist) + 65
         self.low = np.argmax(hist) + 45
@@ -126,12 +126,14 @@ class HysterThresh:
 
     def _hyster_rec(self, r, c):
         h, w = self.img.shape
-        for ri in range(r-1, r+2):
-            for ci in range(c-1, c+2):
-                if (h > ri >= 0
+        for ri in range(r - 1, r + 2):
+            for ci in range(c - 1, c + 2):
+                if (
+                    h > ri >= 0
                     and w > ci >= 0
                     and self.im[ri, ci] == 0
-                    and self.high > self.img[ri, ci] >= self.low):
+                    and self.high > self.img[ri, ci] >= self.low
+                ):
                     self.im[ri, ci] = self.img[ri, ci] + self.diff
                     self._hyster_rec(ri, ci)
 
@@ -139,7 +141,7 @@ class HysterThresh:
         r, c = self.img.shape
         for ri in range(r):
             for ci in range(c):
-                if (self.img[ri, ci] >= self.high):
+                if self.img[ri, ci] >= self.high:
                     self.im[ri, ci] = 255
                     self.img[ri, ci] = 255
                     self._hyster_rec(ri, ci)
@@ -148,12 +150,14 @@ class HysterThresh:
 def _hyst_word_norm(image):
     """Word normalization using hystheresis thresholding."""
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-#     img = cv2.bilateralFilter(gray, 0, 10, 30)
+    #     img = cv2.bilateralFilter(gray, 0, 10, 30)
     img = cv2.bilateralFilter(gray, 10, 10, 30)
     return HysterThresh(img).get_image()
 
 
-def word_normalization(image, height, border=True, tilt=True, border_size=15, hyst_norm=False):
+def word_normalization(
+    image, height, border=True, tilt=True, border_size=15, hyst_norm=False
+):
     """ Preprocess a word - resize, binarize, tilt world."""
     image = resize(image, height, True)
 
@@ -163,16 +167,16 @@ def word_normalization(image, height, border=True, tilt=True, border_size=15, hy
         img = cv2.bilateralFilter(image, 10, 30, 30)
         gray = 255 - cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         norm = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
-        ret,th = cv2.threshold(norm, 50, 255, cv2.THRESH_TOZERO)
+        ret, th = cv2.threshold(norm, 50, 255, cv2.THRESH_TOZERO)
 
     if tilt:
         return _word_tilt(th, height, border, border_size)
     return _crop_add_border(th, height, border, border_size)
 
 
-def _resize_letter(img, size = 56):
+def _resize_letter(img, size=56):
     """Resize bigger side of the image to given size."""
-    if (img.shape[0] > img.shape[1]):
+    if img.shape[0] > img.shape[1]:
         rat = size / img.shape[0]
         return cv2.resize(img, (int(rat * img.shape[1]), size))
     else:
@@ -194,12 +198,14 @@ def letter_normalization(image, is_thresh=True, dim=False):
     offset = [0, 0]
     # Calculate offset for smaller size
     if image.shape[0] > image.shape[1]:
-        offset = [int((result.shape[1] - resized.shape[1])/2), 4]
+        offset = [int((result.shape[1] - resized.shape[1]) / 2), 4]
     else:
-        offset = [4, int((result.shape[0] - resized.shape[0])/2)]
-    # Replace zeros by image 
-    result[offset[1]:offset[1] + resized.shape[0],
-           offset[0]:offset[0] + resized.shape[1]] = resized
+        offset = [4, int((result.shape[0] - resized.shape[0]) / 2)]
+    # Replace zeros by image
+    result[
+        offset[1] : offset[1] + resized.shape[0],
+        offset[0] : offset[0] + resized.shape[1],
+    ] = resized
 
     if dim:
         return result, image.shape
