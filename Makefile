@@ -37,7 +37,9 @@ $(VENV_NAME)/bin/activate: requirements.txt requirements-dev.txt # Replace with 
 	touch $(VENV_NAME)/bin/activate
 
 lint: venv
-	${PYTHON} -m pylint src
+# pylint supports pyproject.toml from 2.5 version. Switch to following cmd once updated:
+# ${PYTHON} -m pylint src
+	${PYTHON} -m pylint --extension-pkg-whitelist=cv2 --variable-rgx='[a-z_][a-z0-9_]{0,30}$' --max-line-length=88 src
 	${PYTHON} -m flake8 src
 
 data:

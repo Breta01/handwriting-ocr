@@ -27,3 +27,14 @@ exclude = '''
   | dist
 )/
 '''
+
+# This will work once pylint 2.5 is release ##
+# Update pylint as soon as possible
+[tool.pylint.'MASTER']
+extension-pkg-whitelist='cv2'
+
+[tool.pylint.'BASIC']
+variable-rgx='[a-z_][a-z0-9_]{0,30}$'
+
+[tool.pylint.'FORMAT']
+max-line-length=88

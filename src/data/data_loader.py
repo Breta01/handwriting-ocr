@@ -1,15 +1,18 @@
 # Copyright 2020 Břetislav Hájek <info@bretahajek.com>
 # Licensed under the MIT License. See LICENSE for details.
+"""Modelu for downloading datasets and loading data (DATASETS list)."""
+
 from abc import ABCMeta, abstractmethod
 import getpass
-import os
+import gzip
 from pathlib import Path
-import sys
 import tarfile
 import urllib.request
 import zipfile
 
+import cv2 as cv
 import gdown
+import numpy as np
 from tqdm import tqdm
 
 
@@ -31,8 +34,8 @@ def download_url(url, output, username=None, password=None):
     Args:
         url (str): URL for downloading the file
         output (Path): Path where should be downloaded file stored
-        username (str): (optional) username for authentication
-        password (str): (optional) username for authentication
+        username (str): (Optional) username for authentication
+        password (str): (Optional) username for authentication
 
     Returns:
         status (int): Returns status of download (200: OK, 401: Unauthorized,
@@ -41,7 +44,7 @@ def download_url(url, output, username=None, password=None):
 
     if "drive.google.com" in url:
         gdown.download(url, str(output), quiet=False)
-        return
+        return 200
 
     for _ in range(3):
         if username or password:
@@ -62,23 +65,32 @@ def download_url(url, output, username=None, password=None):
             except urllib.error.HTTPError as e:
                 if hasattr(e, "code") and e.code == 401:
                     return 401
-                else:
-                    print(f"\nError occured during download:\n{e}")
-                    return -1
+                print(f"\nError occured during download:\n{e}")
+                return -1
 
 
 def file_extract(file_path, out_path):
     """Extract archive file into given location.
 
     Args:
-        file_path (Path): path of archive file
-        out_path (Path): path of folder where should be the file extracted
+        file_path (Path): Path of archive file
+        out_path (Path): Path of folder where should be the file extracted
     """
     print(f"Extracting {file_path} file...")
     if file_path.suffix == ".zip":
-        open_file = lambda x: zipfile.ZipFile(x, "r")
-    elif file_path.suffix in [".gz", ".tgz", ".tar"]:
-        open_file = lambda x: tarfile.open(x, "r:gz")
+
+        def open_file(x):
+            return zipfile.ZipFile(x, "r")
+
+    elif file_path.suffix in [".gz", ".tgz"]:
+
+        def open_file(x):
+            return tarfile.open(x, "r:gz")
+
+    elif file_path.suffix == ".tar":
+
+        def open_file(x):
+            return tarfile.open(x, "r")
 
     with open_file(file_path) as data_file:
         data_file.extractall(out_path)
@@ -90,11 +102,13 @@ class Data(metaclass=ABCMeta):
     Attributes:
         files (List[Tuple[str, str, str, str]]): List of datasets' files/folders (URL,
             tmp file, final file or folder, dataset type folder)
-        require_auth (bool): if authentication is required (default = False)
-        username (str): (optional) username for authentication during donwload
-        password (str): (optional) password for authentication during donwload
+        name (str): Name of dataset. It is used for naming appropriate folders.
+        require_auth (bool): If authentication is required (default = False)
+        username (str): (Optional) username for authentication during donwload
+        password (str): (Optional) password for authentication during donwload
     """
 
+    name = None
     require_auth = False
     username, password = None, None
 
@@ -105,9 +119,26 @@ class Data(metaclass=ABCMeta):
 
     @abstractmethod
     def load(self, data_path):
-        pass
+        """Returns path to line images with corresponding labels.
+
+        Args:
+            data_path (Path): Path to data folder
+
+        Returns:
+            lines (List[Tuple[Path, str]]): List of tuples containing path to image and
+                label
+        """
+        ...
 
     def is_downloaded(self, data_path):
+        """Check if dataset is downloaded.
+
+        Args:
+            data_path (Path): Path to data folder
+
+        Returns:
+            is_downloaded (bool): True if dataset is downloaded (no folder missing)
+        """
         for _, _, res, folder in self.files:
             if not data_path.joinpath(folder, self.name, res).exists():
                 return False
@@ -115,10 +146,12 @@ class Data(metaclass=ABCMeta):
 
     def download(self, data_path):
         print(f"Collecting dataset {self.name}...")
+        downloaded = False
         for url, f, res, folder in self.files:
             folder = data_path.joinpath(folder, self.name)
             tmp_output = folder.joinpath(f)
             res_output = folder.joinpath(res)
+
             if not res_output.exists():
                 tmp_output.parent.mkdir(parents=True, exist_ok=True)
                 # Try the authentication 3 times
@@ -133,15 +166,27 @@ class Data(metaclass=ABCMeta):
                     status = download_url(url, tmp_output, self.username, self.password)
                     if status == 200:
                         break
-                    elif status == 401 and i < 2:
+
+                    if status == 401 and i < 2:
                         print("Invalid username or password, please try again.")
                     else:
                         print(f"Dataset {self.name} skipped.")
                         return
+                downloaded = True
 
                 if tmp_output.suffix in [".zip", ".gz", ".tgz", ".tar"]:
                     file_extract(tmp_output, res_output)
                     tmp_output.unlink()
+
+        if downloaded:
+            self.post_download(data_path)
+
+    def post_download(self, data_path):
+        """Run post-processing on downloaded data (e.g. cut lines from form images)
+
+        Args:
+            data_path (Path): Path to data folder
+        """
 
 
 class Breta(Data):
@@ -265,11 +310,36 @@ class Camb(Data):
     def __init__(self, name="camb"):
         self.name = name
 
+    def post_download(self, data_path):
+        print(f"Running post-download processing on {self.name}...")
+        folder = data_path.joinpath("raw", self.name)
+        output = folder.joinpath("extracted")
+        output.mkdir(parents=True, exist_ok=True)
+
+        for i, seg_f in enumerate(sorted(folder.glob("**/*.seg"))):
+            with gzip.open(seg_f.with_suffix(".tiff.gz"), "rb") as f:
+                buff = np.frombuffer(f.read(), dtype=np.int8)
+                image = cv.imdecode(buff, cv.IMREAD_UNCHANGED)
+
+            with open(seg_f, "r") as f:
+                f.readline()
+                for line in f:
+                    rect = list(map(int, line.strip().split(" ")[1:]))
+                    word = line.split(" ")[0]
+                    im = image[rect[2] : rect[3], rect[0] : rect[1]]
+
+                    if 0 in im.shape:
+                        continue
+                    cv.imwrite(str(output.joinpath(f"{word}_{i:04}.png")), im)
+
     def load(self, data_path):
-        pass
+        folder = data_path.joinpath("raw/extracted")
+        return [(p, p.name.split("_")[0]) for p in folder.glob("**/*.png")]
+
+
+DATASETS = [Breta(), CVL(), IAM(), ORAND(), Camb()]
 
 
 if __name__ == "__main__":
-    datasets = [Breta(), CVL(), IAM(), ORAND(), Camb()]
-    for d in datasets:
+    for d in DATASETS:
         d.download(DATA_FOLDER)
