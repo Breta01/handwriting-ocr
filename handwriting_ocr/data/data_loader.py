@@ -100,17 +100,21 @@ class Data(metaclass=ABCMeta):
     """Abstract class for managing data.
 
     Attributes:
+        name (str): Name of dataset. It is used for naming appropriate folders.
         files (List[Tuple[str, str, str, str]]): List of datasets' files/folders (URL,
             tmp file, final file or folder, dataset type folder)
-        name (str): Name of dataset. It is used for naming appropriate folders.
         require_auth (bool): If authentication is required (default = False)
         username (str): (Optional) username for authentication during donwload
         password (str): (Optional) password for authentication during donwload
     """
 
-    name = None
     require_auth = False
     username, password = None, None
+
+    @property
+    @abstractmethod
+    def name(self):
+        ...
 
     @property
     @abstractmethod
@@ -126,7 +130,7 @@ class Data(metaclass=ABCMeta):
 
         Returns:
             lines (List[Tuple[Path, str]]): List of tuples containing path to image and
-                label
+                label. It should always return images in same order (sort on return).
         """
         ...
 
@@ -192,6 +196,7 @@ class Data(metaclass=ABCMeta):
 class Breta(Data):
     """Handwriting data from Břetislav Hájek."""
 
+    name = "breta"
     files = [
         (
             "https://drive.google.com/uc?id=1p7tZWzK0yWZO35lipNZ_9wnfXRNIZOqj",
@@ -219,6 +224,7 @@ class CVL(Data):
     More info at: https://zenodo.org/record/1492267#.Xob4lPGxXeR
     """
 
+    name = "cvl"
     files = [
         (
             "https://zenodo.org/record/1492267/files/cvl-database-1-1.zip",
@@ -232,7 +238,29 @@ class CVL(Data):
         self.name = name
 
     def load(self, data_path):
-        pass
+        lines = []
+
+        folder = data_path.joinpath(self.files[0][3], self.name)
+        for xf in folder.glob("**/xml/*.xml"):
+            try:
+                with open(xf, "r") as f:
+                    root = ET.fromstring(f.read())
+            except:
+                with open(xf, "r", encoding="iso-8859-15") as f:
+                    root = ET.fromstring(f.read())
+            # Get tag schema
+            tg = root.tag[: -len(root.tag.split("}", 1)[1])]
+            for attr in root.findall(
+                f".//{tg}AttrRegion[@attrType='2'][@fontType='2']"
+            ):
+                target = " ".join(
+                    x.get("text") for x in attr.findall(f"{tg}AttrRegion[@text]")
+                )
+                if len(target) != 0:
+                    l_dit[attr.get("id")] = target
+
+        ln_f = folder.joinpath(self.files[1][2])
+        return sorted((p, l_dic[p.with_suffix("").name]) for p in ln_f.glob("**/*.tif"))
 
 
 class IAM(Data):
@@ -240,6 +268,7 @@ class IAM(Data):
     More info at: http://www.fki.inf.unibe.ch/databases/iam-handwriting-database
     """
 
+    name = "iam"
     require_auth = True
     files = [
         (
@@ -262,7 +291,16 @@ class IAM(Data):
         self.password = password
 
     def load(self, data_path):
-        pass
+        lines = []
+
+        folder = data_path.joinpath(self.files[0][3], self.name)
+        with open(folder.joinpath(self.files[0][2]), "r") as f:
+            labels = [l.strip() for l in f if l.strip()[0] != "#"]
+            labels = map(lambda x: (x.split(" ")[0], x.split(" ", 8)[-1]), labels)
+            l_dic = {im: label.replace("|", " ") for im, label in labels}
+
+        ln_f = folder.joinpath(self.files[1][2])
+        return sorted((p, l_dic[p.with_suffix("").name]) for p in ln_f.glob("**/*.png"))
 
 
 class ORAND(Data):
@@ -270,6 +308,7 @@ class ORAND(Data):
     More info at: https://www.orand.cl/icfhr2014-hdsr/#datasets
     """
 
+    name = "orand"
     files = [
         (
             "https://www.orand.cl/orand_car/ORAND-CAR-2014.tar.gz",
@@ -283,7 +322,15 @@ class ORAND(Data):
         self.name = name
 
     def load(self, data_path):
-        pass
+        lines = []
+
+        folder = data_path.joinpath(self.files[0][3], self.name)
+        for label_f in folder.glob("**/CAR-*/*.txt"):
+            im_folder = Path(str(label_f)[:-6] + "images")
+            with open(label_f, "r") as f:
+                labels = map(lambda x: x.strip().split("\t"), f)
+                lines.extend((im_folder.joinpath(im), w) for im, w in labels)
+        return sorted(lines)
 
 
 class Camb(Data):
@@ -291,6 +338,7 @@ class Camb(Data):
     More info at: ftp://svr-ftp.eng.cam.ac.uk/pub/data/handwriting_databases.README
     """
 
+    name = "camb"
     files = [
         (
             "ftp://svr-ftp.eng.cam.ac.uk/pub/data/handwriting_databases.README",
@@ -312,7 +360,7 @@ class Camb(Data):
 
     def post_download(self, data_path):
         print(f"Running post-download processing on {self.name}...")
-        folder = data_path.joinpath("raw", self.name)
+        folder = data_path.joinpath(self.files[0][3], self.name)
         output = folder.joinpath("extracted")
         output.mkdir(parents=True, exist_ok=True)
 
@@ -333,13 +381,16 @@ class Camb(Data):
                     cv.imwrite(str(output.joinpath(f"{word}_{i:04}.png")), im)
 
     def load(self, data_path):
-        folder = data_path.joinpath("raw/extracted")
-        return [(p, p.name.split("_")[0]) for p in folder.glob("**/*.png")]
+        folder = data_path.joinpath(self.files[0][3], self.name, "extracted")
+        return sorted((p, p.name.split("_")[0]) for p in folder.glob("**/*.png"))
 
 
 DATASETS = [Breta(), CVL(), IAM(), ORAND(), Camb()]
 
 
 if __name__ == "__main__":
+    CVL().download(DATA_FOLDER)
+    print(CVL().load(DATA_FOLDER)[:10])
+    assert False
     for d in DATASETS:
         d.download(DATA_FOLDER)
