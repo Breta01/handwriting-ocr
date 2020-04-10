@@ -8,6 +8,7 @@ import gzip
 from pathlib import Path
 import tarfile
 import urllib.request
+import xml.etree.ElementTree
 import zipfile
 
 import cv2 as cv
@@ -134,6 +135,17 @@ class Data(metaclass=ABCMeta):
         """
         ...
 
+    def clear(self, data_path):
+        """Clear all downloaded files of dataset.
+
+        Args:
+            data_path (Path): Path to data folder
+        """
+        for _, _, res, folder in self.files:
+            d = data_path.joinpath(folder, self.name)
+            if not d.exists():
+                shutil.rmtree(d)
+
     def is_downloaded(self, data_path):
         """Check if dataset is downloaded.
 
@@ -192,6 +204,9 @@ class Data(metaclass=ABCMeta):
             data_path (Path): Path to data folder
         """
 
+    def __str__(self):
+        return self.name
+
 
 class Breta(Data):
     """Handwriting data from Břetislav Hájek."""
@@ -199,13 +214,13 @@ class Breta(Data):
     name = "breta"
     files = [
         (
-            "https://drive.google.com/uc?id=1p7tZWzK0yWZO35lipNZ_9wnfXRNIZOqj",
+            "https://drive.google.com/uc?id=1y6Kkcfk4DkEacdy34HJtwjPVa1ZhyBgg",
             "data.zip",
             "",
             "raw",
         ),
         (
-            "https://drive.google.com/uc?id=1y6Kkcfk4DkEacdy34HJtwjPVa1ZhyBgg",
+            "https://drive.google.com/uc?id=1p7tZWzK0yWZO35lipNZ_9wnfXRNIZOqj",
             "data.zip",
             "",
             "processed",
@@ -216,7 +231,8 @@ class Breta(Data):
         self.name = name
 
     def load(self, data_path):
-        pass
+        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        return sorted((p, p.name.split("_")[0]) for p in folder.glob("**/*.png"))
 
 
 class CVL(Data):
@@ -240,14 +256,15 @@ class CVL(Data):
     def load(self, data_path):
         lines = []
 
-        folder = data_path.joinpath(self.files[0][3], self.name)
+        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        l_dic = {}
         for xf in folder.glob("**/xml/*.xml"):
             try:
                 with open(xf, "r") as f:
-                    root = ET.fromstring(f.read())
+                    root = xml.etree.ElementTree.fromstring(f.read())
             except:
                 with open(xf, "r", encoding="iso-8859-15") as f:
-                    root = ET.fromstring(f.read())
+                    root = xml.etree.ElementTree.fromstring(f.read())
             # Get tag schema
             tg = root.tag[: -len(root.tag.split("}", 1)[1])]
             for attr in root.findall(
@@ -257,10 +274,14 @@ class CVL(Data):
                     x.get("text") for x in attr.findall(f"{tg}AttrRegion[@text]")
                 )
                 if len(target) != 0:
-                    l_dit[attr.get("id")] = target
+                    l_dic[attr.get("id")] = target
 
-        ln_f = folder.joinpath(self.files[1][2])
-        return sorted((p, l_dic[p.with_suffix("").name]) for p in ln_f.glob("**/*.tif"))
+        ln_f = folder.joinpath(self.files[0][2])
+        return sorted(
+            (p, l_dic[p.with_suffix("").name])
+            for p in ln_f.glob("**/lines/*/*.tif")
+            if p.with_suffix("").name in l_dic
+        )
 
 
 class IAM(Data):
@@ -324,7 +345,7 @@ class ORAND(Data):
     def load(self, data_path):
         lines = []
 
-        folder = data_path.joinpath(self.files[0][3], self.name)
+        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
         for label_f in folder.glob("**/CAR-*/*.txt"):
             im_folder = Path(str(label_f)[:-6] + "images")
             with open(label_f, "r") as f:
@@ -385,12 +406,40 @@ class Camb(Data):
         return sorted((p, p.name.split("_")[0]) for p in folder.glob("**/*.png"))
 
 
-DATASETS = [Breta(), CVL(), IAM(), ORAND(), Camb()]
+class NIST(Data):
+    """NIST SD 19 - character dataset
+    More info at: https://www.nist.gov/srd/nist-special-database-19
+    """
+
+    name = "nist"
+    files = [
+        (
+            "https://s3.amazonaws.com/nist-srd/SD19/by_class.zip",
+            "by_class.zip",
+            "",
+            "raw",
+        ),
+    ]
+
+    def __init__(self, name="nist"):
+        self.name = name
+
+    def load(self, data_path):
+        # TODO: Generate lines from NIST characters
+        return []
+
+    def load_characters(self, data_path):
+        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        return sorted(
+            (p, chr(int(p.name.split("_"), 16)))
+            for p in folder.glob("**/trian_*/*.png")
+        )
+
+
+DATASETS = [Breta(), CVL(), IAM(), ORAND(), Camb(), NIST()]
 
 
 if __name__ == "__main__":
-    CVL().download(DATA_FOLDER)
-    print(CVL().load(DATA_FOLDER)[:10])
-    assert False
     for d in DATASETS:
         d.download(DATA_FOLDER)
+        print(d, len(d.load(DATA_FOLDER)))
