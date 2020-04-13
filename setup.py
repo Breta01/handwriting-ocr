@@ -1,10 +1,20 @@
 # Copyright 2020 Břetislav Hájek <info@bretahajek.com>
 # Licensed under the MIT License. See LICENSE for details.
-import setuptools
 from pathlib import Path
+
+import pkg_resources
+import setuptools
 
 
 CURRENT_DIR = Path(__file__).parent
+
+
+# TODO: Later if possible move all requirements to setup.py
+with CURRENT_DIR.joinpath("requirements.txt").open() as f:
+    install_req = list(map(str, pkg_resources.parse_requirements(f)))
+
+with CURRENT_DIR.joinpath("requirements-dev.txt").open() as f:
+    dev_req = list(map(str, pkg_resources.parse_requirements(f)))
 
 
 def get_long_description() -> str:
@@ -28,14 +38,8 @@ setuptools.setup(
     python_requires=">=3.7",
     keywords="handwriting ocr",
     license="MIT",
-    install_requires=[
-        # TODO: Add requirements.txt
-    ],
-    extras_require={
-        "dev": [
-            # TODO: Add requirements-dev.txt
-        ]
-    },
+    install_requires=install_req,
+    extras_require={"dev": dev_req,},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
