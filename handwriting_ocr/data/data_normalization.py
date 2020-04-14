@@ -1,40 +1,15 @@
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+"""Modelu for creating sets (train/dev/test) of normalized images."""
+# TODO: Rename to data_create_sets.py or something like that
 import argparse
-import glob
-import os
-import sys
+from pathlib import Path
 
-import cv2
+import cv2 as cv
 import numpy as np
-from PIL import Image
 
-location = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(location, "../"))
-
-from data_extractor import datasets
-from ocr.normalization import word_normalization
-from ocr.viz import print_progress_bar
-
-
-data_folder = "words_final"
-output_folder = os.path.join(location, "../../data/processed/")
-
-
-parser = argparse.ArgumentParser(description="Script normalizing words from datasts.")
-parser.add_argument(
-    "-d",
-    "--dataset",
-    nargs="*",
-    choices=datasets.keys(),
-    help="Pick dataset(s) to be used.",
-)
-parser.add_argument(
-    "-p",
-    "--path",
-    nargs="*",
-    default=[],
-    help="""Path to folder containing the dataset. For multiple datasets
-    provide path or ''. If not set, default paths will be used.""",
-)
+from handwriting_ocr.data.data_loader import DATASETS, DATA_FOLDER
+from handwriting_ocr.ocr.normalization import word_normalization
 
 
 def words_norm(location, output):
@@ -65,22 +40,60 @@ def words_norm(location, output):
     print("\tNumber of normalized words:", len([n for n in os.listdir(output)]))
 
 
+def create_sets(data_path, test_size, dev_size, seed=42):
+    np.random.seed(seed)
+    lines = []
+    for d in DATASETS:
+        if d.is_downloaded(data_path):
+            lines.extend(d.load(data_path))
+    np.random.shuffle(lines)
+
+    test_i, dev_i = map(
+        int, len(lines) * test_size, len(lines) * (test_size + dev_size)
+    )
+
+    sets = {
+        "test": lines[:test_i],
+        "dev": lines[test_i:dev_i],
+        "train": lines[dev_i:],
+    }
+
+    for k, lns in sets.items():
+        folder = data_path.joinpath("sets", k)
+        folder.mkdir(parents=True, exists_ok=True)
+        # TODO: Normalize image and move it to folder
+        # TODO: Create txt file with paths (image names) and labels
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        description="Script for creating sets (train/dev/test) of normalized images."
+    )
+    parser.add_argument(
+        "--test_size",
+        type=float,
+        default=0.1,
+        help="Percentage (0-1) size of test set.",
+    )
+    parser.add_argument(
+        "--dev_size",
+        type=float,
+        default=0.1,
+        help="Percentage (0-1) size of development set.",
+    )
+    parser.add_argument("--seed", type=int, default=42, help="Seed for random shuffle.")
+    parser.add_argument(
+        "--data_path",
+        type=Path,
+        default=DATA_FOLDER,
+        help="Path of data folder (default is recommended).",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    args = parser.parse_args()
-    if args.dataset == ["all"]:
-        args.dataset = list(datasets.keys())[:-1]
+    args = get_args()
+    for d in DATASETS:
+        d.download(DATA_FOLDER)
 
-    assert args.path == [] or len(args.dataset) == len(
-        args.path
-    ), "provide same number of paths as datasets (use '' for default)"
-    if args.path != []:
-        for ds, path in zip(args.dataset, args.path):
-            datasets[ds][1] = path
-
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
-    for ds in args.dataset:
-        print("Processing -", ds)
-        entry = datasets[ds]
-        words_norm(entry[1], os.path.join(output_folder, ds))
+    create_sets(args.data_path, args.test_size, args.dev_size, args.seed)

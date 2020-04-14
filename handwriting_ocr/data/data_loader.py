@@ -124,7 +124,7 @@ class Data(metaclass=ABCMeta):
 
     @abstractmethod
     def load(self, data_path):
-        """Returns path to line images with corresponding labels.
+        """Returns path to line images with corresponding labels (sorted by path).
 
         Args:
             data_path (Path): Path to data folder
@@ -142,7 +142,7 @@ class Data(metaclass=ABCMeta):
             data_path (Path): Path to data folder
         """
         for _, _, res, folder in self.files:
-            d = data_path.joinpath(folder, self.name)
+            d = data_path / folder / self.name
             if not d.exists():
                 shutil.rmtree(d)
 
@@ -164,9 +164,9 @@ class Data(metaclass=ABCMeta):
         print(f"Collecting dataset {self.name}...")
         downloaded = False
         for url, f, res, folder in self.files:
-            folder = data_path.joinpath(folder, self.name)
-            tmp_output = folder.joinpath(f)
-            res_output = folder.joinpath(res)
+            folder = data_path / folder / self.name
+            tmp_output = folder / f
+            res_output = folder / res
 
             if not res_output.exists():
                 tmp_output.parent.mkdir(parents=True, exist_ok=True)
@@ -231,7 +231,7 @@ class Breta(Data):
         self.name = name
 
     def load(self, data_path):
-        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        folder = data_path / self.files[0][3] / self.name / self.files[0][2]
         return sorted((p, p.name.split("_")[0]) for p in folder.glob("**/*.png"))
 
 
@@ -256,7 +256,7 @@ class CVL(Data):
     def load(self, data_path):
         lines = []
 
-        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        folder = data_path / self.files[0][3] / self.name / self.files[0][2]
         l_dic = {}
         for xf in folder.glob("**/xml/*.xml"):
             try:
@@ -276,7 +276,7 @@ class CVL(Data):
                 if len(target) != 0:
                     l_dic[attr.get("id")] = target
 
-        ln_f = folder.joinpath(self.files[0][2])
+        ln_f = folder / self.files[0][2]
         return sorted(
             (p, l_dic[p.with_suffix("").name])
             for p in ln_f.glob("**/lines/*/*.tif")
@@ -314,13 +314,13 @@ class IAM(Data):
     def load(self, data_path):
         lines = []
 
-        folder = data_path.joinpath(self.files[0][3], self.name)
+        folder = data_path / self.files[0][3] / self.name
         with open(folder.joinpath(self.files[0][2]), "r") as f:
             labels = [l.strip() for l in f if l.strip()[0] != "#"]
             labels = map(lambda x: (x.split(" ")[0], x.split(" ", 8)[-1]), labels)
             l_dic = {im: label.replace("|", " ") for im, label in labels}
 
-        ln_f = folder.joinpath(self.files[1][2])
+        ln_f = folder / self.files[1][2]
         return sorted((p, l_dic[p.with_suffix("").name]) for p in ln_f.glob("**/*.png"))
 
 
@@ -345,7 +345,7 @@ class ORAND(Data):
     def load(self, data_path):
         lines = []
 
-        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        folder = data_path / self.files[0][3] / self.name / self.files[0][2]
         for label_f in folder.glob("**/CAR-*/*.txt"):
             im_folder = Path(str(label_f)[:-6] + "images")
             with open(label_f, "r") as f:
@@ -381,8 +381,8 @@ class Camb(Data):
 
     def post_download(self, data_path):
         print(f"Running post-download processing on {self.name}...")
-        folder = data_path.joinpath(self.files[0][3], self.name)
-        output = folder.joinpath("extracted")
+        folder = data_path / self.files[0][3] / self.name
+        output = folder / "extracted"
         output.mkdir(parents=True, exist_ok=True)
 
         for i, seg_f in enumerate(sorted(folder.glob("**/*.seg"))):
@@ -402,7 +402,7 @@ class Camb(Data):
                     cv.imwrite(str(output.joinpath(f"{word}_{i:04}.png")), im)
 
     def load(self, data_path):
-        folder = data_path.joinpath(self.files[0][3], self.name, "extracted")
+        folder = data_path / self.files[0][3] / self.name / "extracted"
         return sorted((p, p.name.split("_")[0]) for p in folder.glob("**/*.png"))
 
 
@@ -429,9 +429,9 @@ class NIST(Data):
         return []
 
     def load_characters(self, data_path):
-        folder = data_path.joinpath(self.files[0][3], self.name, self.files[0][2])
+        folder = data_path / self.files[0][3] / self.name / self.files[0][2]
         return sorted(
-            (p, chr(int(p.name.split("_"), 16)))
+            (p, chr(int(p.name.split("_")[1], 16)))
             for p in folder.glob("**/trian_*/*.png")
         )
 
