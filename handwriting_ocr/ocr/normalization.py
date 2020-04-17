@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
 """
 Include functions for normalizing images of words and letters
 Main functions: word_normalization, letter_normalization, image_standardization
 """
-import numpy as np
-import cv2
 import math
 
-from .helpers import *
+import numpy as np
+import cv2
+
+from handwriting_ocr.ocr.helpers import *
 
 
 def image_standardization(image):

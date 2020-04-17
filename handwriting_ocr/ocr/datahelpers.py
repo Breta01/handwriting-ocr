@@ -1,19 +1,19 @@
-# -*- coding: utf-8 -*-
-"""
-Helper functions for loading and creating datasets
-"""
-import numpy as np
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+"""Helper functions for loading and creating datasets"""
+
 import glob
 import simplejson
 import os
-import cv2
 import csv
 import sys
-import unidecode
 
-from .helpers import implt
-from .normalization import letter_normalization
-from .viz import print_progress_bar
+import cv2
+import unidecode
+import numpy as np
+
+from handwriting_ocr.ocr.helpers import implt
+from handwriting_ocr.ocr.normalization import letter_normalization
 
 
 CHARS = [
@@ -127,7 +127,6 @@ def load_words_data(dataloc="data/words/", is_csv=False, load_gaplines=False):
 
         labels = np.empty(length, dtype=object)
         images = np.empty(length, dtype=object)
-        i = 0
         for loc in dataloc:
             print(loc)
             with open(loc) as csvfile:
@@ -140,8 +139,6 @@ def load_words_data(dataloc="data/words/", is_csv=False, load_gaplines=False):
                     labels[i] = row["label"]
                     images[i] = img
 
-                    print_progress_bar(i, length)
-                    i += 1
     else:
         img_list = []
         tmp_labels = []
@@ -156,7 +153,6 @@ def load_words_data(dataloc="data/words/", is_csv=False, load_gaplines=False):
         # Load grayscaled images
         for i, img in enumerate(img_list):
             images[i] = cv2.imread(img, 0)
-            print_progress_bar(i, len(img_list))
 
         # Load gaplines (lines separating letters) from txt files
         if load_gaplines:
@@ -240,7 +236,6 @@ def load_chars_data(charloc="data/charclas/", wordloc="data/words/", lang="cz"):
         labels.extend(chars)
         images2 = np.zeros((len(imgs), 4096))
         for i in range(len(imgs)):
-            print_progress_bar(i, len(imgs))
             images2[i] = letter_normalization(imgs[i]).reshape(1, 4096)
 
         images = np.concatenate([images, images2])

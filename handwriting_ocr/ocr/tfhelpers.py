@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
 """
 Provide functions and classes:
 Model       = Class for loading and using trained models from tensorflow

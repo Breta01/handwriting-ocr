@@ -1,12 +1,16 @@
-# -*- coding: utf-8 -*-
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+
 import os
-import numpy as np
-import tensorflow as tf
-import cv2
 import math
 
-from .helpers import *
-from .tfhelpers import Model
+import cv2
+import numpy as np
+import tensorflow as tf
+
+from handwriting_ocr.ocr.helpers import *
+from handwriting_ocr.ocr.tfhelpers import Model
+
 
 # Preloading trained model with activation function
 # Loading is slow -> prevent multiple loads

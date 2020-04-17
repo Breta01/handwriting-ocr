@@ -17,8 +17,7 @@ import numpy as np
 import glob
 import argparse
 import simplejson
-from ocr.normalization import imageNorm
-from ocr.viz import printProgressBar
+from handwritin_ocr.ocr.normalization import word_normalization
 
 
 def loadImages(dataloc, idx=0, num=None):
@@ -42,14 +41,13 @@ def loadImages(dataloc, idx=0, num=None):
     for i, img in enumerate(imglist):
         # TODO Speed up loading - Normalization
         if i >= idx and i < upper:
-            images[i] = imageNorm(
+            images[i] = word_normalization(
                 cv2.cvtColor(cv2.imread(img), cv2.COLOR_BGR2RGB),
                 height=60,
                 border=False,
                 tilt=True,
                 hystNorm=True,
             )
-            printProgressBar(i - idx, upper - idx - 1)
     print()
     return (images[idx:num], labels[idx:num])
 

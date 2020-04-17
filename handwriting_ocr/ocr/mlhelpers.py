@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Classes for controling machine learning processes
-"""
-import numpy as np
-import math
-import matplotlib.pyplot as plt
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+"""Classes for controling machine learning processes."""
+
 import csv
+import math
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class TrainingPlot:

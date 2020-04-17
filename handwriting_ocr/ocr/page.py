@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Crop background and transform perspective from the photo of page
-"""
-import numpy as np
-import cv2
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+"""Crop background and transform perspective from the photo of page."""
 
-from .helpers import *
+import cv2
+import numpy as np
+
+from handwriting_ocr.ocr.helpers import *
 
 
 def detection(image):

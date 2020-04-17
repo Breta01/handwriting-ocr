@@ -1,9 +1,10 @@
 # Copyright 2020 Břetislav Hájek <info@bretahajek.com>
 # Licensed under the MIT License. See LICENSE for details.
 """Helper functions for ocr project."""
+
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
 
 
 SMALL_HEIGHT = 800

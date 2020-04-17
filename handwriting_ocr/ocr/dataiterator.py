@@ -1,9 +1,12 @@
-# -*- coding: utf-8 -*-
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
 """Classes for feeding data during training."""
+
 import numpy as np
 import pandas as pd
-from .helpers import img_extend
-from .datahelpers import sequences_to_sparse
+
+from handwriting_ocr.ocr.helpers import img_extend
+from handwriting_ocr.ocr.datahelpers import sequences_to_sparse
 
 
 class BucketDataIterator:

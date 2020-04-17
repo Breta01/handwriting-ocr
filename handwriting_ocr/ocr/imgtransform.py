@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Functions for transforming and preprocessing images for training
-"""
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+"""Functions for transforming and preprocessing images for training."""
+
+import cv2
 import numpy as np
 import pandas as pd
-import cv2
 from scipy.ndimage.interpolation import map_coordinates
 
 

@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Detect words on the page
-return array of words' bounding boxes
-"""
-import numpy as np
-import matplotlib.pyplot as plt
-import cv2
+# Copyright 2020 Břetislav Hájek <info@bretahajek.com>
+# Licensed under the MIT License. See LICENSE for details.
+"""Detecting bounding boxes of words in the page."""
 
-from .helpers import *
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+from handwriting_ocr.ocr.helpers import *
 
 
 def detection(image, join=False):

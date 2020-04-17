@@ -1,10 +1,12 @@
-.PHONY: help bootstrap lint clean
+.PHONY: help bootstrap data lint clean
 
 SHELL=/bin/bash
 
 VENV_NAME?=venv
 VENV_BIN=$(shell pwd)/${VENV_NAME}/bin
 VENV_ACTIVATE=source $(VENV_NAME)/bin/activate
+
+PROJECT_DIR=handwriting_ocr
 
 PYTHON=${VENV_NAME}/bin/python3
 
@@ -36,7 +38,7 @@ $(VENV_NAME)/bin/activate: setup.py requirements.txt requirements-dev.txt
 	touch $(VENV_NAME)/bin/activate
 
 data:
-	${PYTHON} src/data/data_loader.py
+	${PYTHON} ${PROJECT_DIR}/data/data_create_sets.py
 
 lint: venv
 # pylint supports pyproject.toml from 2.5 version. Switch to following cmd once updated:
