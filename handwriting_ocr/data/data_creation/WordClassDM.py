@@ -17,8 +17,7 @@ import numpy as np
 import glob
 import argparse
 import simplejson
-from ocr.normalization import imageNorm
-from ocr.viz import printProgressBar
+from handwritin_ocr.ocr.normalization import word_normalization
 
 
 def loadImages(dataloc, idx=0, num=None):
@@ -26,9 +25,9 @@ def loadImages(dataloc, idx=0, num=None):
     print("Loading words...")
 
     # Load images and short them from the oldest to the newest
-    imglist = glob.glob(os.path.join(dataloc, u'*.jpg'))
+    imglist = glob.glob(os.path.join(dataloc, "*.jpg"))
     imglist.sort(key=lambda x: float(x.split("_")[-1][:-4]))
-    tmpLabels = [name[len(dataloc):] for name in imglist]
+    tmpLabels = [name[len(dataloc) :] for name in imglist]
 
     labels = np.array(tmpLabels)
     images = np.empty(len(imglist), dtype=object)
@@ -42,19 +41,19 @@ def loadImages(dataloc, idx=0, num=None):
     for i, img in enumerate(imglist):
         # TODO Speed up loading - Normalization
         if i >= idx and i < upper:
-            images[i] = imageNorm(
+            images[i] = word_normalization(
                 cv2.cvtColor(cv2.imread(img), cv2.COLOR_BGR2RGB),
                 height=60,
                 border=False,
                 tilt=True,
-                hystNorm=True)
-            printProgressBar(i-idx, upper-idx-1)
+                hystNorm=True,
+            )
     print()
     return (images[idx:num], labels[idx:num])
 
 
 def locCheck(loc):
-    return loc + '/' if loc[-1] != '/' else loc
+    return loc + "/" if loc[-1] != "/" else loc
 
 
 class Cycler:
@@ -67,33 +66,33 @@ class Cycler:
         # Create save_loc directory if not exists
         if not os.path.exists(save_loc):
             os.makedirs(save_loc)
-            
+
         self.data_loc = locCheck(data_loc)
         self.save_loc = locCheck(save_loc)
-        
+
         self.idx = 0
         self.org_idx = idx
 
         self.blockLoad()
         self.image_act = self.images[self.idx]
 
-        cv2.namedWindow('image')
-        cv2.setMouseCallback('image', self.mouseHandler)
+        cv2.namedWindow("image")
+        cv2.setMouseCallback("image", self.mouseHandler)
         self.nextImage()
 
         self.run()
 
     def run(self):
-        while(1):
+        while 1:
             self.imageShow()
             k = cv2.waitKey(1) & 0xFF
-            if k == ord('d'):
+            if k == ord("d"):
                 # Delete last line
                 self.deleteLastLine()
-            elif k == ord('r'):
+            elif k == ord("r"):
                 # Clear current gaplines
                 self.nextImage()
-            elif k == ord('s'):
+            elif k == ord("s"):
                 # Save gaplines with image
                 if self.saveData():
                     self.idx += 1
@@ -101,7 +100,7 @@ class Cycler:
                         if not self.blockLoad():
                             break
                     self.nextImage()
-            elif k == ord('n'):
+            elif k == ord("n"):
                 # Skip to next image
                 self.idx += 1
                 if self.idx >= len(self.images):
@@ -116,29 +115,32 @@ class Cycler:
 
     def blockLoad(self):
         self.images, self.labels = loadImages(
-            self.data_loc, self.org_idx + self.idx, 100)
+            self.data_loc, self.org_idx + self.idx, 100
+        )
         self.org_idx += self.idx
         self.idx = 0
         return len(self.images) is not 0
 
     def imageShow(self):
         cv2.imshow(
-            'image',
+            "image",
             cv2.resize(
                 self.image_act,
-                (0,0),
+                (0, 0),
                 fx=self.scaleF,
                 fy=self.scaleF,
-                interpolation=cv2.INTERSECT_NONE))
+                interpolation=cv2.INTERSECT_NONE,
+            ),
+        )
 
     def nextImage(self):
         self.image_act = cv2.cvtColor(self.images[self.idx], cv2.COLOR_GRAY2RGB)
         self.label_act = self.labels[self.idx][:-4]
-        self.gaplines =  [0, self.image_act.shape[1]]
+        self.gaplines = [0, self.image_act.shape[1]]
         self.redrawLines()
 
         print(self.org_idx + self.idx, ":", self.label_act.split("_")[0])
-        self.imageShow();
+        self.imageShow()
 
     def saveData(self):
         self.gaplines.sort()
@@ -148,9 +150,9 @@ class Cycler:
             assert len(self.gaplines) - 1 == len(self.label_act.split("_")[0])
 
             cv2.imwrite(
-                    self.save_loc + '%s.jpg' % (self.label_act),
-                    self.images[self.idx])
-            with open(self.save_loc + '%s.txt' % (self.label_act), 'w') as fp:
+                self.save_loc + "%s.jpg" % (self.label_act), self.images[self.idx]
+            )
+            with open(self.save_loc + "%s.txt" % (self.label_act), "w") as fp:
                 simplejson.dump(self.gaplines, fp)
             return True
         except:
@@ -171,8 +173,7 @@ class Cycler:
             self.drawLine(x)
 
     def drawLine(self, x):
-        cv2.line(
-            self.image_act, (x, 0), (x, self.image_act.shape[0]), (0,255,0), 1)
+        cv2.line(self.image_act, (x, 0), (x, self.image_act.shape[0]), (0, 255, 0), 1)
 
     def mouseHandler(self, event, x, y, flags, param):
         # Clip x into image width range
@@ -194,26 +195,20 @@ class Cycler:
                 self.drawLine(x)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-            "Script creating UI for gaplines classification")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Script creating UI for gaplines classification")
+    parser.add_argument("--index", type=int, default=0, help="Index of starting image")
+
     parser.add_argument(
-        "--index",
-        type=int,
-        default=0,
-        help="Index of starting image")
-    
-    parser.add_argument(
-        "--data",
-        type=str,
-        default='data/words_raw',
-        help="Path to folder with images")
-    
+        "--data", type=str, default="data/words_raw", help="Path to folder with images"
+    )
+
     parser.add_argument(
         "--save",
         type=str,
-        default='data/words2',
-        help="Path to folder for saving images with gaplines")
+        default="data/words2",
+        help="Path to folder for saving images with gaplines",
+    )
 
     args = parser.parse_args()
     Cycler(args.index, args.data, args.save)

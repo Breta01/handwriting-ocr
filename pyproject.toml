@@ -1,0 +1,51 @@
+# Project configuration
+title = "Handwriting OCR"
+
+[owner]
+name = "Břetislav Hájek"
+
+
+[build-system]
+requires = ["setuptools", "wheel"]
+
+
+# NOTE: you have to use single-quoted strings in TOML for regular expressions.
+# It's the equivalent of r-strings in Python.  Multiline strings are treated as
+# verbose regular expressions by Black.  Use [ ] to denote a significant space
+# character.
+[tool.black]
+line-length = 88
+target-version = ['py37', 'py38']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+# This will work once pylint 2.5 is release ##
+# Update pylint as soon as possible
+[tool.pylint.'MASTER']
+extension-pkg-whitelist='cv2'
+
+[tool.pylint.'BASIC']
+variable-rgx='[a-z_][a-z0-9_]{0,30}$'
+
+[tool.pylint.'FORMAT']
+max-line-length=88

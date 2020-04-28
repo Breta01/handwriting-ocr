@@ -1,0 +1,8 @@
+gdown==3.10.2
+matplotlib==3.2.1
+numpy==1.18.2
+opencv-python==4.2.0.32
+pandas==1.0.3
+tensorflow==2.1.0
+tensorflow-addons==0.8.1
+tqdm==4.44.1
