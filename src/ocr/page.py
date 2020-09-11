@@ -9,17 +9,18 @@ from .helpers import *
 
 def detection(image):
     """Finding Page."""
+    small = resize(image)
     # Edge detection
-    image_edges = _edges_detection(image, 200, 250)
+    image_edges = _edges_detection(small, 200, 250)
     
     # Close gaps between edges (double page clouse => rectangle kernel)
     closed_edges = cv2.morphologyEx(image_edges, 
                                     cv2.MORPH_CLOSE, 
                                     np.ones((5, 11)))
     # Countours
-    page_contour = _find_page_contours(closed_edges, resize(image))
+    page_contour = _find_page_contours(closed_edges, small)
     # Recalculate to original scale
-    page_contour = page_contour.dot(ratio(image))    
+    page_contour = page_contour.dot(ratio(image, small.shape[0]))
     # Transform prespective
     new_image = _persp_transform(image, page_contour)
     return new_image
@@ -27,7 +28,7 @@ def detection(image):
 
 def _edges_detection(img, minVal, maxVal):
     """Preprocessing (gray, thresh, filter, border) + Canny edge detection."""
-    img = cv2.cvtColor(resize(img), cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     img = cv2.bilateralFilter(img, 9, 75, 75)
     img = cv2.adaptiveThreshold(img, 255,
