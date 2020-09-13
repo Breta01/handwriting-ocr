@@ -7,7 +7,7 @@ import cv2
 
 from .helpers import *
 
-def detection(image):
+def detection(image, area_thresh = 0.5):
     """Finding Page."""
     small = resize(image)
     # Edge detection
@@ -18,7 +18,8 @@ def detection(image):
                                     cv2.MORPH_CLOSE, 
                                     np.ones((5, 11)))
     # Countours
-    page_contour = _find_page_contours(closed_edges, small)
+    page_contour = _find_page_contours(closed_edges, small, area_thresh)
+
     # Recalculate to original scale
     page_contour = page_contour.dot(ratio(image, small.shape[0]))
     # Transform prespective
@@ -63,7 +64,7 @@ def _contour_offset(cnt, offset):
     return cnt
 
 
-def _find_page_contours(edges, img):
+def _find_page_contours(edges, img, area_thresh):
     """Finding corner points of page contour."""
     contours, hierarchy = cv2.findContours(edges,
                                                 cv2.RETR_TREE,
@@ -72,7 +73,7 @@ def _find_page_contours(edges, img):
     # Finding biggest rectangle otherwise return original corners
     height = edges.shape[0]
     width = edges.shape[1]
-    MIN_COUNTOUR_AREA = height * width * 0.5
+    MIN_COUNTOUR_AREA = height * width * area_thresh
     MAX_COUNTOUR_AREA = (width - 10) * (height - 10)
 
     max_area = MIN_COUNTOUR_AREA
