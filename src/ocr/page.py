@@ -7,19 +7,21 @@ import cv2
 
 from .helpers import *
 
-def detection(image):
+def detection(image, area_thresh = 0.5):
     """Finding Page."""
+    small = resize(image)
     # Edge detection
-    image_edges = _edges_detection(image, 200, 250)
+    image_edges = _edges_detection(small, 200, 250)
     
     # Close gaps between edges (double page clouse => rectangle kernel)
     closed_edges = cv2.morphologyEx(image_edges, 
                                     cv2.MORPH_CLOSE, 
                                     np.ones((5, 11)))
     # Countours
-    page_contour = _find_page_contours(closed_edges, resize(image))
+    page_contour = _find_page_contours(closed_edges, small, area_thresh)
+
     # Recalculate to original scale
-    page_contour = page_contour.dot(ratio(image))    
+    page_contour = page_contour.dot(ratio(image, small.shape[0]))
     # Transform prespective
     new_image = _persp_transform(image, page_contour)
     return new_image
@@ -27,7 +29,7 @@ def detection(image):
 
 def _edges_detection(img, minVal, maxVal):
     """Preprocessing (gray, thresh, filter, border) + Canny edge detection."""
-    img = cv2.cvtColor(resize(img), cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     img = cv2.bilateralFilter(img, 9, 75, 75)
     img = cv2.adaptiveThreshold(img, 255,
@@ -62,16 +64,16 @@ def _contour_offset(cnt, offset):
     return cnt
 
 
-def _find_page_contours(edges, img):
+def _find_page_contours(edges, img, area_thresh):
     """Finding corner points of page contour."""
-    im2, contours, hierarchy = cv2.findContours(edges,
+    contours, hierarchy = cv2.findContours(edges,
                                                 cv2.RETR_TREE,
                                                 cv2.CHAIN_APPROX_SIMPLE)
     
     # Finding biggest rectangle otherwise return original corners
     height = edges.shape[0]
     width = edges.shape[1]
-    MIN_COUNTOUR_AREA = height * width * 0.5
+    MIN_COUNTOUR_AREA = height * width * area_thresh
     MAX_COUNTOUR_AREA = (width - 10) * (height - 10)
 
     max_area = MIN_COUNTOUR_AREA

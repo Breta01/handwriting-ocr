@@ -114,7 +114,7 @@ def _text_detect(img, image, join=False):
     
     # Finding contours
     mask = np.zeros(small.shape, np.uint8)
-    im2, cnt, hierarchy = cv2.findContours(np.copy(small),
+    cnt, hierarchy = cv2.findContours(np.copy(small),
                                            cv2.RETR_CCOMP,
                                            cv2.CHAIN_APPROX_SIMPLE)
     

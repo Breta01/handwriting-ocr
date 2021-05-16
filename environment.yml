@@ -78,6 +78,7 @@ numpy=1.15.4
 numpy-base=1.15.4
 opencv=3.4.2
 openssl=1.0.2p
+pandas
 pandoc=2.2.3.2
 pandocfilters=1.4.2
 parso=0.3.1
