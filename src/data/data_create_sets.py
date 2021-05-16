@@ -30,7 +30,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-d', '--dataset',
     nargs='*',
-    choices=datasets.keys(),
+    choices=list(datasets.keys()) + ['all'],
+    default=['all'],
     help='Pick dataset(s) to be used.')
 parser.add_argument(
     '-p', '--path',
@@ -52,7 +53,7 @@ parser.add_argument(
 if __name__ == '__main__':
     args = parser.parse_args()
     if args.dataset == ['all']:
-        args.dataset = list(datasets.keys())[:-1]
+        args.dataset = list(datasets.keys())
 
     assert args.path == [] or len(args.dataset) == len(args.path), \
         "provide same number of paths as datasets (use '' for default)"

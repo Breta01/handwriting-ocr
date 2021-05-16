@@ -11,7 +11,7 @@ datasets = {
     'cvl': [cvl.extract, os.path.join(data_folder, 'cvl'), 3],
     'orand': [orand.extract, os.path.join(data_folder, 'orand'), 4],
     'camb': [camb.extract, os.path.join(data_folder, 'camb'), 5],
-    'all': []}
+}
 
 output_folder = 'words_final'
 
@@ -21,7 +21,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-d', '--dataset',
     nargs='*',
-    choices=datasets.keys(),
+    choices=list(datasets.keys()) + ['all'],
+    default=['all'],
     help='Pick dataset(s) to be used.')
 parser.add_argument(
     '-p', '--path',
@@ -32,9 +33,9 @@ parser.add_argument(
 
     
 if __name__ == '__main__':
-    args = parser.parse_args() 
+    args = parser.parse_args()
     if args.dataset == ['all']:
-        args.dataset = list(datasets.keys())[:-1]
+        args.dataset = list(datasets.keys())
 
     assert args.path == [] or len(args.dataset) == len(args.path), \
         "provide same number of paths as datasets (use '' for default)"
@@ -45,4 +46,8 @@ if __name__ == '__main__':
     for ds in args.dataset:
         print("Processing -", ds)
         entry = datasets[ds]
-        entry[0](entry[1], output_folder, entry[2])
+        try:
+            entry[0](entry[1], output_folder, entry[2])
+        except FileNotFoundError:
+            print("    Error - File not found, skipping dataset", ds)
+        
