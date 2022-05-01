@@ -11,7 +11,7 @@ After downloading these datasets, there are scripts in `src/data/` folder which 
 *5000 images*  
 All data owned by [@Breta01](https://github.com/Breta01) are available on this link (distributed under the same license as this repository). The data should be placed either in `raw/breta/` or `processed/breta/` folder according to their location in archive from the link below. (I removed the Czech accents from words. If you want to use them, you have to recover them using CSV files containing: `word_without_accents, original_word` in UTF-8 encoding.)
 
-<https://drive.google.com/file/d/0Bw95a8U_pp2aakE0emZraHpHczA/view?usp=sharing>
+<https://drive.google.com/file/d/0Bw95a8U_pp2aakE0emZraHpHczA/view?usp=sharing&resourcekey=0-RoGuifPEGQO13aMp1-KcZg>
 
 ### IAM Handwriting Database (2)
 *85000 images*  
