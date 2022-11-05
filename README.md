@@ -9,7 +9,7 @@ Proces of recognition is divided into 4 steps. The initial input is a photo of p
 1. Detection of page and removal of background
 2. Detection and separation of words
 3. Normalization of words
-4. Separation and recegnition of characters (recognition of words)
+4. Separation and recognition of characters (recognition of words)
 
 Main files combining all the steps are [OCR.ipynb](notebooks/OCR.ipynb) or [OCR-Evaluator.ipynb](notebooks/ocr_evaluator.ipynb). Naming of files goes by step representing - name of machine learning model.
 
