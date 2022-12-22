@@ -20,8 +20,10 @@ def image_standardization(image):
 def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
     """Crop and add border to word image of letter segmentation."""
     # Clear small values
-    ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
-
+    try:
+        ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
+    except:
+        import pdb;pdb.set_trace()
     x0 = 0
     y0 = 0
     x1 = img.shape[1]
@@ -167,7 +169,7 @@ def word_normalization(image, height, border=True, tilt=True, border_size=15, hy
 
     if tilt:
         return _word_tilt(th, height, border, border_size)
-    return _crop_add_border(th, height, border, border_size)
+    return _crop_add_border(th, height=height, border=border, border_size=border_size)
 
 
 def _resize_letter(img, size = 56):
