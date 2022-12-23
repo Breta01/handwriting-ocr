@@ -20,10 +20,9 @@ def image_standardization(image):
 def _crop_add_border(img, height, threshold=50, border=True, border_size=15):
     """Crop and add border to word image of letter segmentation."""
     # Clear small values
-    try:
-        ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
-    except:
-        import pdb;pdb.set_trace()
+
+    ret, img = cv2.threshold(img, threshold, 255, cv2.THRESH_TOZERO)
+
     x0 = 0
     y0 = 0
     x1 = img.shape[1]

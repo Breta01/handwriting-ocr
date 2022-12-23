@@ -76,7 +76,7 @@ ncurses=6.1
 notebook=5.7.1
 numpy=1.15.4
 numpy-base=1.15.4
-opencv=3.4.2
+opencv=4.6.0
 openssl=1.0.2p
 pandas
 pandoc=2.2.3.2
@@ -109,7 +109,7 @@ sip=4.19.8
 six=1.11.0
 sqlite=3.25.3
 tensorboard=1.12.0
-tensorflow=1.12.0
+tensorflow=2.9.1
 tensorflow-base=1.12.0
 termcolor=1.1.0
 terminado=0.8.1
